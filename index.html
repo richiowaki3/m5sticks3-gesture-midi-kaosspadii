@@ -854,7 +854,7 @@
   <!-- Header Section -->
   <header>
     <h1>ANTIGRAVITY KP2 HYBRID MASTER</h1>
-    <div class="subtitle">KORG KAOSS PAD KP2 3D骨格空間制御システム (v2.5)</div>
+    <div class="subtitle">KORG KAOSS PAD KP2 3D骨格空間制御システム (v2.6)</div>
   </header>
 
   <!-- Dashboard Container -->
@@ -1247,6 +1247,15 @@
         Left: new THREE.Quaternion(),
         Right: new THREE.Quaternion()
       },
+      // --- DYNAMIC GRAVITY CALIBRATION STATE ---
+      gravityRef: {
+        Left: new THREE.Vector3(0, 0, -1),
+        Right: new THREE.Vector3(0, 0, -1)
+      },
+      lastAcc: {
+        Left: new THREE.Vector3(0, 0, -1),
+        Right: new THREE.Vector3(0, 0, -1)
+      },
 
       // --- CIRCULAR WRAPPING CALIBRATION ENGINE ---
       calibrationOffset: {
@@ -1537,12 +1546,16 @@
       );
       q.multiply(deltaQ).normalize();
 
+      // 最新の加速度を保存しておく（キャリブレーション時に使用）
+      state.lastAcc[side].set(accX, accY, accZ);
+
       const acc = new THREE.Vector3(accX, accY, accZ);
       const accLen = acc.length();
       
       if (accLen > 0.7 && accLen < 1.5) {
         acc.normalize();
-        const gravityRef = new THREE.Vector3(0, 0, -1);
+        // 動的キャリブレーションされた重力参照ベクトルを使用
+        const gravityRef = state.gravityRef[side];
         const gravityEst = gravityRef.clone().applyQuaternion(q);
         const correctionQ = new THREE.Quaternion().setFromUnitVectors(gravityEst, acc);
         const alpha = 0.02;
@@ -1711,15 +1724,21 @@
     }
 
     function resetAttitudeCalibration(side) {
+      // キャリブレーション瞬間の加速度（重力）ベクトルを検出し、相補フィルターの基準重力ベクトルとしてセットする
+      const acc = state.lastAcc[side].clone();
+      if (acc.length() > 0.5) {
+        state.gravityRef[side].copy(acc).normalize();
+      }
+
       const euler = new THREE.Euler().setFromQuaternion(state.quaternions[side], 'YXZ');
-      const rollDeg = (euler.z * 180 / Math.PI + 360) % 360;
-      const pitchDeg = (euler.x * 180 / Math.PI + 360) % 360;
+      const rollDeg = (euler.y * 180 / Math.PI + 360) % 360; // Z軸周り(Yaw)からY軸周り(Roll/ひねり)に修正！
+      const pitchDeg = (euler.x * 180 / Math.PI + 360) % 360; // X軸周り(Pitch/上下傾き)
 
       if (side === 'Right') {
         state.calibrationOffset.Right.roll = rollDeg;
         state.calibrationOffset.Right.pitch = pitchDeg;
         state.relativeCoords.Right.pan = 64.0;
-        addLog("Right", `Calibration Lock: Lock position at Roll ${rollDeg.toFixed(0)}° / Pitch ${pitchDeg.toFixed(0)}° mapped as 180° Center.`, "right");
+        addLog("Right", `Calibration Lock: Lock position at Roll(ひねり) ${rollDeg.toFixed(0)}° / Pitch(傾き) ${pitchDeg.toFixed(0)}° mapped as 180° Center.`, "right");
       } else {
         state.calibrationOffset.Left.pitch = pitchDeg;
         state.relativeCoords.Left.pan = 64.0;
@@ -1748,8 +1767,8 @@
       if (side === 'Right') {
         // --- RIGHT HAND: Circular Wrapping Coords & Sliders Ranges ---
         const euler = new THREE.Euler().setFromQuaternion(state.quaternions.Right, 'YXZ');
-        let currentAbsRoll = (euler.z * 180 / Math.PI + 360) % 360;
-        let currentAbsPitch = (euler.x * 180 / Math.PI + 360) % 360;
+        let currentAbsRoll = (euler.y * 180 / Math.PI + 360) % 360; // Z軸からY軸周り(Roll/ひねり)に修正！
+        let currentAbsPitch = (euler.x * 180 / Math.PI + 360) % 360; // X軸周り(Pitch/上下傾き)
 
         state.currentAbsoluteAngles.Right.roll = currentAbsRoll;
         state.currentAbsoluteAngles.Right.pitch = currentAbsPitch;
@@ -1782,26 +1801,10 @@
         streamKP2CC("Right", 12, finalRollCC); 
         streamKP2CC("Right", 13, finalPitchCC); 
 
-        // E. Touch Gate Selection
+        // E. Touch Gate Selection (STRICT PHYSICAL BUTTON A ONLY - Auto-Touch completely removed!)
         if (rawArgs.length >= 7) {
-          // New firmware -> STRICT A Button Gate
           const btnPressed = Number(rawArgs[6]) === 1;
           sendKP2ButtonTouch(btnPressed);
-        } else {
-          // Old firmware -> Automatically fallback to motion-intensity Touch Gate (Auto-Touch)
-          const moveAmt = Math.abs(gyroX) + Math.abs(gyroY) + Math.abs(gyroZ);
-          const now = Date.now();
-          if (moveAmt > 22.0) {
-            state.lastMoveTime = now;
-            if (!state.isAutoTouched && !state.isPadTouched) {
-              sendKP2ButtonTouch(true);
-              state.isAutoTouched = true;
-            }
-          }
-          if (state.isAutoTouched && (now - state.lastMoveTime > 350)) {
-            sendKP2ButtonTouch(false);
-            state.isAutoTouched = false;
-          }
         }
 
       } else {

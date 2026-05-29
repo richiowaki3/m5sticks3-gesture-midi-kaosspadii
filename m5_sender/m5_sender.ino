@@ -48,6 +48,7 @@ const unsigned long GESTURE_COOLDOWN_MS = 350;
 float lastAngle = 0;
 float accumulatedAngle = 0;
 unsigned long circleTimer = 0;
+float lastTotalAcc = 1.0f;
 
 // =================================================================
 // SETUP: 初期化
@@ -162,8 +163,6 @@ void loop() {
     // -------------------------------------------------------------
     // C. 円運動 (Oジェスチャー) オンボードリアルタイム判定
     // -------------------------------------------------------------
-    // 手を回す動作は上下(Pitch: X軸回転)と左右(Yaw: Z軸回転)の組み合わせになるため、
-    // gyroZ と gyroX の極座標角度変化を積算するのが幾何学的に正解です！
     // ※アタック打撃直後のクールダウン中は円運動の積算を一時的にマスクして誤判定を防ぐ
     if (now - lastAttackTime > GESTURE_COOLDOWN_MS) {
       float currentAngle = atan2(gyroZ, gyroX); 
@@ -171,14 +170,16 @@ void loop() {
       if (diff < -PI) diff += 2.0f * PI;
       if (diff > PI)  diff -= 2.0f * PI;
 
-      float gyroMag = sqrt(gyroX * gyroX + gyroZ * gyroZ);
-      if (gyroMag > 110.0f) { // しきい値を 110.0 deg/sec に調整
+      // 手首のひねり(gyroY)を含めた総合角速度でしきい値判定を行うことで、
+      // どの持ち方の角度でも確実に円運動を検知可能に改善
+      float totalGyro = sqrt(gyroX * gyroX + gyroY * gyroY + gyroZ * gyroZ);
+      if (totalGyro > 70.0f) { // しきい値を 70.0 deg/sec に下げて高感度化
         accumulatedAngle += diff;
         if (circleTimer == 0) circleTimer = now;
 
         // 約300度 (5.2ラジアン) 回転したか
         if (abs(accumulatedAngle) >= (300.0f * PI / 180.0f)) {
-          if (now - circleTimer < 800) { // 800ms以内の滑らかな円
+          if (now - circleTimer < 1000) { // 1000ms以内の滑らかな円
             String dir = (accumulatedAngle > 0.0f) ? "CIRCLE_CW" : "CIRCLE_CCW";
             sendOSCGesture(dir);
             flashScreenFeedback(dir, GREEN);
@@ -206,9 +207,11 @@ void loop() {
     M5.Imu.getAccel(&accX, &accY, &accZ);
 
     float totalAcc = sqrt(accX * accX + accY * accY + accZ * accZ);
+    float jerk = totalAcc - lastTotalAcc;
+    lastTotalAcc = totalAcc;
 
-    // 3.0G 以上の急激な負の衝撃ピーク
-    if (totalAcc > 3.0f) {
+    // 単なる加速度超過ではなく、急激な立ち上がり（jerk > 2.0G）かつ強烈な衝撃（totalAcc > 4.5G）をアタックとする
+    if (totalAcc > 4.5f && jerk > 2.0f) {
       lastAttackTime = now; // クールダウン開始
 
       // 1. その瞬間の重力ベクトルを規格化
