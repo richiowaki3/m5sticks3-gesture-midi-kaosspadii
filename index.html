@@ -60,7 +60,7 @@
       margin-bottom: 1.5rem;
       z-index: 10;
       width: 100%;
-      max-width: 700px;
+      max-width: 720px;
       padding: 0 0.5rem;
     }
 
@@ -106,7 +106,7 @@
 
     .dashboard-container {
       width: 100%;
-      max-width: 700px;
+      max-width: 720px;
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
@@ -219,7 +219,7 @@
       font-size: 0.65rem;
       color: var(--text-sub);
       pointer-events: none;
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.65);
       padding: 0.4rem 0.6rem;
       border-radius: 8px;
       border: 1px solid rgba(255, 255, 255, 0.05);
@@ -328,6 +328,43 @@
       text-align: right;
       font-family: monospace;
       font-weight: bold;
+    }
+
+    /* Range Sliders configuration */
+    .range-selector-box {
+      margin-top: 0.6rem;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      padding: 0.6rem 0.8rem;
+    }
+    .range-title {
+      font-size: 0.65rem;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      font-weight: bold;
+      margin-bottom: 0.4rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    .range-inputs {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .range-inputs span {
+      font-size: 0.65rem;
+      color: var(--text-sub);
+      font-family: monospace;
+    }
+    .range-slider-el {
+      flex: 1;
+      accent-color: #ff0055;
+      height: 6px;
+      cursor: pointer;
+    }
+    .left-hand .range-slider-el {
+      accent-color: #00f3ff;
     }
 
     .system-card {
@@ -488,6 +525,13 @@
     .log-body {
       flex: 1;
     }
+    .log-time-gest {
+      color: var(--color-flash);
+      font-weight: bold;
+    }
+    .log-body {
+      flex: 1;
+    }
     .log-tag {
       font-weight: 800;
       margin-right: 0.4rem;
@@ -501,7 +545,7 @@
       color: var(--color-flash);
     }
 
-    /* Emulator & Drum HUD CSS */
+    /* Emulator Styling */
     .emulator-card {
       background: rgba(255, 255, 255, 0.01);
       border: 1px dashed rgba(255, 255, 255, 0.08);
@@ -618,7 +662,7 @@
   <!-- Header Section -->
   <header>
     <h1>ANTIGRAVITY KP2 HYBRID MASTER</h1>
-    <div class="subtitle">KORG KAOSS PAD KP2 3D骨格空間制御システム</div>
+    <div class="subtitle">KORG KAOSS PAD KP2 3D骨格空間制御システム (v2.2)</div>
   </header>
 
   <!-- Dashboard Container -->
@@ -718,14 +762,14 @@
       <!-- Relational coordinates monitor values -->
       <div class="control-display">
         <div class="display-box">
-          <div class="display-lbl">Pad X (Rollひねり)</div>
-          <div id="val-Right-pan-raw" class="display-val" style="color: var(--color-right)">64</div>
+          <div class="display-lbl">Pad X (ひねり角度)</div>
+          <div id="val-Right-pan-raw" class="display-val" style="color: var(--color-right)">180°</div>
         </div>
         <div class="display-box">
-          <div class="display-lbl">Pad Y (Pitch傾き)</div>
-          <div id="val-Right-tilt-raw" class="display-val" style="color: var(--color-right)">64</div>
+          <div class="display-lbl">Pad Y (傾き角度)</div>
+          <div id="val-Right-tilt-raw" class="display-val" style="color: var(--color-right)">180°</div>
         </div>
-        <div class="display-box" id="box-pad-touch">
+        <div class="display-box" id="box-pad-touch" style="border: 2px solid rgba(255,255,255,0.05);">
           <div class="display-lbl">Touch (BtnA / CC#92)</div>
           <div id="val-Right-touch-raw" class="display-val" style="color: var(--text-sub)">OFF</div>
         </div>
@@ -739,6 +783,8 @@
 
       <!-- Mapped 3D Axis CC Visualizers -->
       <div class="sensor-monitor">
+        
+        <!-- Pad X Roll output and calibration slider -->
         <div class="sensor-row">
           <span class="sensor-title">Pad X (CC#12)</span>
           <div class="sensor-slider-container">
@@ -746,16 +792,46 @@
           </div>
           <span id="val-Right-pan" class="sensor-value">64</span>
         </div>
-        <div class="sensor-row">
+
+        <!-- Twist Angle Effective Range Sliders (Min/Max) -->
+        <div class="range-selector-box">
+          <div class="range-title">
+            <span>ひねり (X) 有効角度範囲選定</span>
+            <span id="lbl-range-roll">90° 〜 270°</span>
+          </div>
+          <div class="range-inputs">
+            <span>Min</span>
+            <input type="range" id="range-roll-min" class="range-slider-el" min="0" max="360" value="90" oninput="updateRangeSlidersUI('roll')">
+            <span>Max</span>
+            <input type="range" id="range-roll-max" class="range-slider-el" min="0" max="360" value="270" oninput="updateRangeSlidersUI('roll')">
+          </div>
+        </div>
+
+        <!-- Pad Y Pitch output and calibration slider -->
+        <div class="sensor-row" style="margin-top: 1rem;">
           <span class="sensor-title">Pad Y (CC#13)</span>
           <div class="sensor-slider-container">
             <div id="slider-Right-tilt" class="sensor-slider-fill" style="width: 50%;"></div>
           </div>
           <span id="val-Right-tilt" class="sensor-value">64</span>
         </div>
+
+        <!-- Tilt Angle Effective Range Sliders (Min/Max) -->
+        <div class="range-selector-box">
+          <div class="range-title">
+            <span>傾き (Y) 有効角度範囲選定</span>
+            <span id="lbl-range-pitch">120° 〜 240°</span>
+          </div>
+          <div class="range-inputs">
+            <span>Min</span>
+            <input type="range" id="range-pitch-min" class="range-slider-el" min="0" max="360" value="120" oninput="updateRangeSlidersUI('pitch')">
+            <span>Max</span>
+            <input type="range" id="range-pitch-max" class="range-slider-el" min="0" max="360" value="240" oninput="updateRangeSlidersUI('pitch')">
+          </div>
+        </div>
         
-        <!-- Program number display -->
-        <div class="sensor-row" style="margin-top: 0.5rem; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 0.5rem;">
+        <!-- Program change output display -->
+        <div class="sensor-row" style="margin-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 0.5rem;">
           <span class="sensor-title" style="color: var(--color-flash);"><i class="fa-solid fa-compact-disc"></i> PROGRAM</span>
           <div class="sensor-slider-container" style="background: rgba(255,234,0,0.05);">
             <div id="slider-Right-program" class="sensor-slider-fill" style="width: 1%; background: var(--color-flash); box-shadow: 0 0 10px var(--color-flash-glow);"></div>
@@ -824,17 +900,17 @@
           <div class="slider-group">
             <div class="slider-lbl">
               <span>Simulate Hand Roll (CC#12)</span>
-              <span id="lbl-sim-roll">64</span>
+              <span id="lbl-sim-roll">180°</span>
             </div>
-            <input type="range" id="sim-roll" class="slider-el" min="0" max="127" value="64" oninput="simulateWristChange()">
+            <input type="range" id="sim-roll" class="slider-el" min="0" max="360" value="180" oninput="simulateWristChange()">
           </div>
 
           <div class="slider-group">
             <div class="slider-lbl">
               <span>Simulate Hand Pitch (CC#13)</span>
-              <span id="lbl-sim-pitch">64</span>
+              <span id="lbl-sim-pitch">180°</span>
             </div>
-            <input type="range" id="sim-pitch" class="slider-el" min="0" max="127" value="64" oninput="simulateWristChange()">
+            <input type="range" id="sim-pitch" class="slider-el" min="0" max="360" value="180" oninput="simulateWristChange()">
           </div>
 
           <div class="slider-group">
@@ -849,7 +925,7 @@
           </div>
 
           <div style="font-size: 0.65rem; color: var(--text-sub); line-height: 1.4; padding: 0.2rem;">
-            <p><strong>[O-ジェスチャー模擬]</strong>: キーボードの <strong>[C]</strong> キーで CW（進む）、<strong>[V]</strong> キーで CCW（戻る）プログラム円運動をトリガー。</p>
+            <p><strong>[O-ジェスチャー模擬]</strong>: キーボードの <strong>[C]</strong> キーで CW、<strong>[V]</strong> キーで CCW プログラム変更をトリガー。</p>
             <p style="margin-top: 0.25rem;"><strong>[Thrustリセット模擬]</strong>: キーボードの <strong>[R]</strong> キーで突きキャリブレーション実行。</p>
           </div>
           
@@ -872,7 +948,7 @@
     // =================================================================
     const CONFIG = {
       defaultIP: "192.168.11.10:8080",
-      midiChannel: 1, // KP2 targets channel 1
+      midiChannel: 1, 
       boneLength: 2.5,
       sensorDeadband: 0.05,
       accScale: 8.0, 
@@ -885,10 +961,29 @@
       midiAccess: null,
       midiOutput: null,
       
-      // Attitude quaternions for Left and Right hands (Estimated via Complementary Filter)
+      // Attitude quaternions for Left and Right hands (Complementary Filter)
       quaternions: {
         Left: new THREE.Quaternion(),
         Right: new THREE.Quaternion()
+      },
+
+      // --- CIRCULAR WRAPPING CALIBRATION ENGINE ---
+      // Start posture orientation reference is locked at 180 degrees (Center)
+      calibrationOffset: {
+        Right: { roll: 180, pitch: 180 },
+        Left: { pitch: 180 }
+      },
+      currentAbsoluteAngles: {
+        Right: { roll: 180, pitch: 180 },
+        Left: { pitch: 180 }
+      },
+      
+      // User selectable effective sectors (Min / Max sliders state)
+      effectiveRange: {
+        Right: {
+          roll: { min: 90, max: 270 },
+          pitch: { min: 120, max: 240 }
+        }
       },
       
       // Relational relative cumulative coordinates
@@ -902,8 +997,6 @@
 
       // Button / Touch State
       isPadTouched: false,
-      lastMoveTime: 0,
-      isAutoTouched: false,
       
       lastCCSent: {
         Left: { pan: -1, dolly: -1, tilt: -1 },
@@ -949,21 +1042,20 @@
       dirLight.position.set(2, 5, 3);
       scene.add(dirLight);
 
-      // --- CREATE THE 3D BONE (骨格エミュレーション) ---
+      // --- CREATE THE 3D BONE ---
       const group = new THREE.Group();
       scene.add(group);
 
       const colorHex = side === 'Left' ? 0x00f3ff : 0xff0055;
 
-      // 1. Joint Base (根本の光る球体)
+      // 1. Joint Base
       const baseGeo = new THREE.SphereGeometry(0.18, 16, 16);
       const baseMat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.8 });
       const baseMesh = new THREE.Mesh(baseGeo, baseMat);
       group.add(baseMesh);
 
-      // 2. Bone Vector (骨ベクトル: 根本から前方-Zに伸びるシリンダー)
+      // 2. Bone Vector
       const boneGeo = new THREE.CylinderGeometry(0.04, 0.06, CONFIG.boneLength, 8);
-      // シリンダーはY軸中心に作成されるため、原点から前方-Zに伸びるように回転・移動を適用
       boneGeo.rotateX(Math.PI / 2);
       boneGeo.translate(0, 0, -CONFIG.boneLength / 2);
       
@@ -977,9 +1069,9 @@
       });
       const boneMesh = new THREE.Mesh(boneGeo, boneMat);
       group.add(boneMesh);
-      bones[side] = boneMesh; // 姿勢同期用
+      bones[side] = boneMesh; 
 
-      // 3. Joint Tip (ボーン先端の光る球体)
+      // 3. Joint Tip
       const tipGeo = new THREE.SphereGeometry(0.22, 16, 16);
       const tipMat = new THREE.MeshBasicMaterial({ 
         color: side === 'Left' ? 0x00f3ff : 0xffea00, 
@@ -987,11 +1079,11 @@
         opacity: 0.9 
       });
       const tipMesh = new THREE.Mesh(tipGeo, tipMat);
-      tipMesh.position.set(0, 0, -CONFIG.boneLength); // 先端
-      boneMesh.add(tipMesh); // ボーンの子要素にして自動同期
+      tipMesh.position.set(0, 0, -CONFIG.boneLength); 
+      boneMesh.add(tipMesh); 
       boneTips[side] = tipMesh;
 
-      // 4. M5StickS3 Device Wireframe (手元のコントローラーの傾き表示)
+      // 4. M5StickS3 Device Wireframe
       const boxGeo = new THREE.BoxGeometry(0.6, 0.22, 1.1);
       const boxMat = new THREE.MeshBasicMaterial({
         color: colorHex,
@@ -1004,7 +1096,6 @@
       boneMesh.add(m5Mesh);
       m5Boxes[side] = m5Mesh;
 
-      // --- 右手用 18分割空間ドラムネオンガイドサークルの描画 ---
       if (side === 'Right') {
         build3DDrumHUD(scene);
       }
@@ -1013,19 +1104,15 @@
       function animate() {
         requestAnimationFrame(animate);
 
-        // Apply estimated quaternions
         if (bones[side]) {
           bones[side].quaternion.copy(state.quaternions[side]);
         }
 
-        // HUD Text Update
         updateHUDText(side);
-
         renderer.render(scene, camera);
       }
       animate();
 
-      // Auto-resize
       window.addEventListener('resize', () => {
         const w = canvas.clientWidth;
         const h = canvas.clientHeight;
@@ -1038,13 +1125,9 @@
     // 18分割ガイドサークルの3D空間生成
     function build3DDrumHUD(scene) {
       const radius = CONFIG.boneLength;
+      const phiUpper = 30 * Math.PI / 180;
+      const phiLower = 60 * Math.PI / 180;
 
-      // 1. 斜め上層 (Sectors 0~7): Pitch +25度 (Z成分を上向きにする)
-      // 2. 斜め下層 (Sectors 8~15): Pitch -25度 (Z成分を下向きにする)
-      // 3. 真上 (Zenith / Sector 16)
-      // 4. 真下 (Nadir / Sector 17)
-
-      // Helper to add a neon indicator node
       function addNeonNode(x, y, z, index) {
         const nodeGeo = new THREE.SphereGeometry(0.08, 8, 8);
         const nodeMat = new THREE.MeshBasicMaterial({
@@ -1056,10 +1139,8 @@
         nodeMesh.position.set(x, y, z);
         scene.add(nodeMesh);
         
-        // Save references for flash triggers
         drumSectorsMesh[index] = nodeMesh;
 
-        // Add a line connecting base to the node
         const points = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(x, y, z)];
         const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
         const lineMat = new THREE.LineBasicMaterial({ color: 0xff0055, transparent: true, opacity: 0.05 });
@@ -1067,8 +1148,6 @@
         scene.add(line);
       }
 
-      // Upper layer: phi = 30 deg, theta = 45 * i deg
-      const phiUpper = 30 * Math.PI / 180;
       for (let i = 0; i < 8; i++) {
         const theta = (i * 45) * Math.PI / 180;
         const x = radius * Math.sin(phiUpper) * Math.cos(theta);
@@ -1077,8 +1156,6 @@
         addNeonNode(x, y, z, i);
       }
 
-      // Lower layer: phi = 60 deg, theta = 45 * i deg
-      const phiLower = 60 * Math.PI / 180;
       for (let i = 0; i < 8; i++) {
         const theta = (i * 45) * Math.PI / 180;
         const x = radius * Math.sin(phiLower) * Math.cos(theta);
@@ -1087,11 +1164,9 @@
         addNeonNode(x, y, z, 8 + i);
       }
 
-      // Zenith (Straight Up)
+      // Zenith / Nadir
       addNeonNode(0, radius, 0, 16);
       drumSectorsMesh[16].material.color.setHex(0xffea00);
-
-      // Nadir (Straight Down)
       addNeonNode(0, -radius, 0, 17);
       drumSectorsMesh[17].material.color.setHex(0xffea00);
     }
@@ -1102,32 +1177,29 @@
 
       mesh.scale.set(3.5, 3.5, 3.5);
       mesh.material.opacity = 1.0;
-      mesh.material.color.setHex(0xffea00); // Flash yellow
+      mesh.material.color.setHex(0xffea00); // Neon Gold Flash
 
-      // Create glowing neon explosion particle
       const parts = [];
-      const partCount = 8;
+      const partCount = 10;
       for(let i=0; i<partCount; i++) {
         const pGeo = new THREE.SphereGeometry(0.04, 4, 4);
-        const pMat = new THREE.MeshBasicMaterial({ color: 0xffea00, transparent: true, opacity: 0.9 });
+        const pMat = new THREE.MeshBasicMaterial({ color: 0xffea00, transparent: true, opacity: 0.95 });
         const pMesh = new THREE.Mesh(pGeo, pMat);
         pMesh.position.copy(mesh.position);
         scenes.Right.add(pMesh);
         parts.push({
           mesh: pMesh,
           vel: new THREE.Vector3(
-            (Math.random() - 0.5) * 0.15,
-            (Math.random() - 0.5) * 0.15,
-            (Math.random() - 0.5) * 0.15
+            (Math.random() - 0.5) * 0.16,
+            (Math.random() - 0.5) * 0.16,
+            (Math.random() - 0.5) * 0.16
           )
         });
       }
 
-      // Decay animation
       let frame = 0;
       function decay() {
         frame++;
-        
         mesh.scale.lerp(new THREE.Vector3(1, 1, 1), 0.15);
         mesh.material.opacity = THREE.MathUtils.lerp(mesh.material.opacity, 0.15, 0.1);
         
@@ -1137,17 +1209,15 @@
           mesh.material.color.lerp(new THREE.Color(0xffea00), 0.1);
         }
 
-        // Animate explosion parts
         parts.forEach(p => {
           p.mesh.position.add(p.vel);
-          p.mesh.scale.multiplyScalar(0.92);
-          p.mesh.material.opacity *= 0.92;
+          p.mesh.scale.multiplyScalar(0.91);
+          p.mesh.material.opacity *= 0.91;
         });
 
         if (frame < 25) {
           requestAnimationFrame(decay);
         } else {
-          // Cleanup parts
           parts.forEach(p => scenes.Right.remove(p.mesh));
         }
       }
@@ -1161,20 +1231,17 @@
       if (side === 'Left') {
         const boneTipWorld = new THREE.Vector3(0, 0, -CONFIG.boneLength).applyQuaternion(state.quaternions.Left);
         hud.innerHTML = `
-          <strong>[BONE世界先端座標]</strong><br>
+          <strong>[BONE世界座標]</strong><br>
           X: ${boneTipWorld.x.toFixed(2)}<br>
           Y: ${boneTipWorld.y.toFixed(2)}<br>
           Z: ${boneTipWorld.z.toFixed(2)}
         `;
       } else {
-        const euler = new THREE.Euler().setFromQuaternion(state.quaternions.Right, 'YXZ');
-        const rollDeg = (euler.z * 180 / Math.PI).toFixed(0);
-        const pitchDeg = (euler.x * 180 / Math.PI).toFixed(0);
         hud.innerHTML = `
-          <strong>[右手姿勢]</strong><br>
-          Rollひねり: ${rollDeg}° (CC#12: ${state.lastCCSent.Right.pan})<br>
-          Pitch傾き: ${pitchDeg}° (CC#13: ${state.lastCCSent.Right.tilt})<br>
-          Touch Gate: ${state.isPadTouched ? 'TOUCH' : 'OFF'}
+          <strong>[右手角度 ＆ 接続]</strong><br>
+          ひねり(Roll): ${state.currentAbsoluteAngles.Right.roll.toFixed(0)}°<br>
+          傾き(Pitch): ${state.currentAbsoluteAngles.Right.pitch.toFixed(0)}°<br>
+          Touch (Aボタン): ${state.isPadTouched ? 'TOUCH' : 'OFF'}
         `;
       }
     }
@@ -1185,7 +1252,6 @@
     function processComplementaryFilter(side, accX, accY, accZ, gyroX, gyroY, gyroZ, dt = 0.015) {
       const q = state.quaternions[side];
 
-      // 1. Gyro integration (angular velocity deg/s to rad/s)
       const gX = gyroX * Math.PI / 180;
       const gY = gyroY * Math.PI / 180;
       const gZ = gyroZ * Math.PI / 180;
@@ -1195,24 +1261,14 @@
       );
       q.multiply(deltaQ).normalize();
 
-      // 2. Accelerometer Gravity Alignment (Anti-Drift Pitch/Roll correction)
       const acc = new THREE.Vector3(accX, accY, accZ);
       const accLen = acc.length();
       
-      // Only apply correction when accelerometer is mostly reading pure gravity (0.7G ~ 1.5G)
       if (accLen > 0.7 && accLen < 1.5) {
         acc.normalize();
-
-        // In standard M5Unified posture, gravity points directly at local Z-axis negative (0, 0, -1)
         const gravityRef = new THREE.Vector3(0, 0, -1);
-        
-        // Project gravity reference through current estimated orientation
         const gravityEst = gravityRef.clone().applyQuaternion(q);
-
-        // Find rotation error between estimated and actual gravity
         const correctionQ = new THREE.Quaternion().setFromUnitVectors(gravityEst, acc);
-
-        // Complementary alpha blend factor (slowly pull orientation towards gravity)
         const alpha = 0.02;
         const identityQ = new THREE.Quaternion();
         const blendedCorrection = identityQ.slerp(correctionQ, alpha);
@@ -1318,33 +1374,34 @@
       const side = parts[2]; // Left or Right
       
       if (address.endsWith("/btnA")) {
-        // Low-latency Button A Gate control from M5s
+        // Right hand physical Button A Touch Gate (Explicit CC#92)
         if (side === 'Right') {
           const isPressed = args[0] === 1;
           sendKP2ButtonTouch(isPressed);
         }
       } 
       else if (address.endsWith("/attack")) {
-        // Spatial 18-Sector Downward Drum hit
+        // Spatial 18-Sector Downward gravity drum hit
         const note = Number(args[0]);
         const vel = Number(args[1]);
         triggerSpatialDrumHit(side, note, vel);
       } 
       else if (address.endsWith("/gesture")) {
         const gestureName = args[0];
+        addLog("Gesture Received", `<span class="log-time-gest">${gestureName}</span>`, side === 'Left' ? "left" : "right");
+        
         if (gestureName === "CIRCLE_CW") {
-          changeKP2Program(1); // Increment Program Change
+          changeKP2Program(1); 
         } else if (gestureName === "CIRCLE_CCW") {
-          changeKP2Program(-1); // Decrement Program Change
+          changeKP2Program(-1); 
         } else if (gestureName === "THRUST") {
-          resetAttitudeCalibration(side); // Fast Calibration reset
+          resetAttitudeCalibration(side); 
         } else if (gestureName === "GESTURE_X") {
-          addLog(side, `Detected X-Gesture skeleton event!`, side === 'Left' ? "left" : "right");
-          playAudioBeep(side, 400, 0.25);
+          addLog(side, `GESTURE_X event triggered successfully!`, side === 'Left' ? "left" : "right");
+          playAudioBeep(side, 440, 0.2);
         }
       } 
       else if (address.startsWith("/m5/")) {
-        // Raw 6-axis stream + Optional Button 7th parameter
         if ((side === 'Right' || side === 'Left') && args.length >= 6) {
           const accX = Number(args[0]);
           const accY = Number(args[1]);
@@ -1389,20 +1446,27 @@
     }
 
     function resetAttitudeCalibration(side) {
-      // 1. Reset relational cumulative offsets
-      if (side === 'Left') {
+      // Get current absolute attitude orientation at the moment of calibration
+      const euler = new THREE.Euler().setFromQuaternion(state.quaternions[side], 'YXZ');
+      const rollDeg = (euler.z * 180 / Math.PI + 360) % 360;
+      const pitchDeg = (euler.x * 180 / Math.PI + 360) % 360;
+
+      if (side === 'Right') {
+        state.calibrationOffset.Right.roll = rollDeg;
+        state.calibrationOffset.Right.pitch = pitchDeg;
+        state.relativeCoords.Right.pan = 64.0;
+        addLog("Right", `Calibration Lock: Lock position at Roll ${rollDeg.toFixed(0)}° / Pitch ${pitchDeg.toFixed(0)}° mapped as 180° Center.`, "right");
+      } else {
+        state.calibrationOffset.Left.pitch = pitchDeg;
         state.relativeCoords.Left.pan = 64.0;
         state.relativeCoords.Left.dolly = 64.0;
-        addLog("Left", "Left hand spatial cumulative coords calibrated to center (64).", "left");
-      } else {
-        state.relativeCoords.Right.pan = 64.0;
-        addLog("Right", "Right hand spatial cumulative coords calibrated to center (64).", "right");
+        addLog("Left", `Calibration Lock: Lock position at Pitch ${pitchDeg.toFixed(0)}° mapped as 180° Center.`, "left");
       }
 
-      // 2. Reset Three.js Attitude Quaternion to Identity
+      // Reset attitude quaternion to Identity
       state.quaternions[side].set(0, 0, 0, 1);
       
-      playAudioBeep(side, 880, 0.15);
+      playAudioBeep(side, 880, 0.2);
     }
 
     // Main telemetry processor
@@ -1413,94 +1477,104 @@
       // 1. Process Complimentary attitude orientation filter
       processComplementaryFilter(side, accX, accY, accZ, gyroX, gyroY, gyroZ, 0.015);
 
-      // --- PERFORM DEDICATED MAPPINGS FOR KORG KP2 ---
-
       if (side === 'Right') {
-        // --- RIGHT HAND: Pad X/Y, Buttons A & Coords ---
+        // --- RIGHT HAND: Circular Wrapping Coords & Sliders Ranges ---
         
-        // A. Extract Roll (Twist) -> Pad X (CC#12)
-        // Extract Euler roll angle
+        // A. Extract Absolute Pitch and Roll angles in 0° ~ 360° circular ring
         const euler = new THREE.Euler().setFromQuaternion(state.quaternions.Right, 'YXZ');
-        let rollVal = euler.z; // Twist roll angle (-PI ~ +PI)
-        
-        // Map Roll (-90 deg to +90 deg) into MIDI 0 ~ 127
-        const rollLimit = 90 * Math.PI / 180;
-        let finalRollCC = Math.round(mapRange(rollVal, -rollLimit, rollLimit, 0, 127));
-        finalRollCC = Math.max(0, Math.min(127, finalRollCC));
+        let currentAbsRoll = (euler.z * 180 / Math.PI + 360) % 360;
+        let currentAbsPitch = (euler.x * 180 / Math.PI + 360) % 360;
 
-        // B. Extract Pitch (Tilt) -> Pad Y (CC#13)
-        let pitchVal = euler.x; // Pitch tilt angle (-PI ~ +PI)
-        const pitchLimit = 60 * Math.PI / 180;
-        let finalPitchCC = Math.round(mapRange(pitchVal, -pitchLimit, pitchLimit, 0, 127));
-        finalPitchCC = Math.max(0, Math.min(127, finalPitchCC));
+        state.currentAbsoluteAngles.Right.roll = currentAbsRoll;
+        state.currentAbsoluteAngles.Right.pitch = currentAbsPitch;
 
-        // Update display numbers
-        document.getElementById("val-Right-pan-raw").textContent = finalRollCC;
-        document.getElementById("val-Right-tilt-raw").textContent = finalPitchCC;
+        // B. Calculate Wrapping Circular Coordinates relative to calibration lock (locked at 180°)
+        // theta_rel = (current - calib + 180) % 360
+        let relRoll = (currentAbsRoll - state.calibrationOffset.Right.roll + 180 + 360) % 360;
+        let relPitch = (currentAbsPitch - state.calibrationOffset.Right.pitch + 180 + 360) % 360;
+
+        // C. Apply User range sector bounds (Min / Max sliders)
+        const rollMin = state.effectiveRange.Right.roll.min;
+        const rollMax = state.effectiveRange.Right.roll.max;
+        const pitchMin = state.effectiveRange.Right.pitch.min;
+        const pitchMax = state.effectiveRange.Right.pitch.max;
+
+        let finalRollCC = mapCircularRangeToMIDI(relRoll, rollMin, rollMax);
+        let finalPitchCC = mapCircularRangeToMIDI(relPitch, pitchMin, pitchMax);
+
+        // Update displays
+        document.getElementById("val-Right-pan-raw").textContent = relRoll.toFixed(0) + "°";
+        document.getElementById("val-Right-tilt-raw").textContent = relPitch.toFixed(0) + "°";
         updateSensorUI("Right", "pan", finalRollCC);
         updateSensorUI("Right", "tilt", finalPitchCC);
 
-        // Stream real-time CC messages
-        streamKP2CC(12, finalRollCC); // Pad X (CC12)
-        streamKP2CC(13, finalPitchCC); // Pad Y (CC13)
+        // Stream CCs
+        streamKP2CC(12, finalRollCC); 
+        streamKP2CC(13, finalPitchCC); 
 
-        // C. Process Button A gate (either from 7th parameter or fallback auto-touch)
+        // D. STRICT BUTTON A Touch Gate (CC#92)
         if (rawArgs.length >= 7) {
           const btnPressed = Number(rawArgs[6]) === 1;
           sendKP2ButtonTouch(btnPressed);
-        } else {
-          // Fallback auto-touch from motion intensity (gyro magnitude)
-          const moveAmt = Math.abs(gyroX) + Math.abs(gyroY) + Math.abs(gyroZ);
-          const now = Date.now();
-          if (moveAmt > 20.0) {
-            state.lastMoveTime = now;
-            if (!state.isAutoTouched && !state.isPadTouched) {
-              sendKP2ButtonTouch(true);
-              state.isAutoTouched = true;
-            }
-          }
-          if (state.isAutoTouched && (now - state.lastMoveTime > 350) && !state.isPadTouched) {
-            sendKP2ButtonTouch(false);
-            state.isAutoTouched = false;
-          }
         }
 
       } else {
-        // --- LEFT HAND: Panpot, Dolly, Effect Depth ---
-
-        // A. Extract Pan (X relative cumulative) -> Panpot (CC#10)
+        // --- LEFT HAND ---
         let filterX = Math.abs(accX) > CONFIG.sensorDeadband ? accX : 0;
         state.relativeCoords.Left.pan += filterX * 6.5; 
         state.relativeCoords.Left.pan = Math.max(0.0, Math.min(127.0, state.relativeCoords.Left.pan));
         const finalPanCC = Math.round(state.relativeCoords.Left.pan);
 
-        // B. Extract Dolly (Z relative cumulative) -> Dolly (CC#20)
-        // Subtract 1G gravity standard offset from Z acceleration
         let filterZ = Math.abs(accZ - 1.0) > 0.08 ? (accZ - 1.0) : 0;
         state.relativeCoords.Left.dolly += filterZ * 6.5;
         state.relativeCoords.Left.dolly = Math.max(0.0, Math.min(127.0, state.relativeCoords.Left.dolly));
         const finalDollyCC = Math.round(state.relativeCoords.Left.dolly);
 
-        // C. Extract Tilt (Pitch absolute) -> Effect Depth (CC#91)
         const euler = new THREE.Euler().setFromQuaternion(state.quaternions.Left, 'YXZ');
-        let pitchVal = euler.x; 
-        const pitchLimit = 60 * Math.PI / 180;
-        let finalTiltCC = Math.round(mapRange(pitchVal, -pitchLimit, pitchLimit, 0, 127));
-        finalTiltCC = Math.max(0, Math.min(127, finalTiltCC));
+        let currentAbsPitch = (euler.x * 180 / Math.PI + 360) % 360;
+        let relPitch = (currentAbsPitch - state.calibrationOffset.Left.pitch + 180 + 360) % 360;
+
+        // Pitch absolute angle maps to depth CC#91 (120 ~ 240 deg defaults)
+        let finalTiltCC = mapCircularRangeToMIDI(relPitch, 120, 240);
 
         // Update displays
         document.getElementById("val-Left-pan-raw").textContent = finalPanCC;
         document.getElementById("val-Left-dolly-raw").textContent = finalDollyCC;
-        document.getElementById("val-Left-tilt-raw").textContent = finalTiltCC;
+        document.getElementById("val-Left-tilt-raw").textContent = relPitch.toFixed(0) + "°";
         
         updateSensorUI("Left", "pan", finalPanCC);
         updateSensorUI("Left", "dolly", finalDollyCC);
         updateSensorUI("Left", "tilt", finalTiltCC);
 
-        // Stream real-time CC
-        streamKP2CC(10, finalPanCC);  // Panpot CC10
-        streamKP2CC(20, finalDollyCC); // Dolly CC20
-        streamKP2CC(91, finalTiltCC);  // Depth CC91
+        streamKP2CC(10, finalPanCC);  
+        streamKP2CC(20, finalDollyCC); 
+        streamKP2CC(91, finalTiltCC);  
+      }
+    }
+
+    // Mathematical circular range bounds mapping
+    function mapCircularRangeToMIDI(val, min, max) {
+      if (min === max) return 64;
+
+      if (min < max) {
+        // Standard range (e.g. 90 ~ 270)
+        if (val <= min) return 1;
+        if (val >= max) return 127;
+        return Math.round(mapRange(val, min, max, 1, 127));
+      } else {
+        // Wrapped range (e.g. 300 ~ 60)
+        if (val >= min) {
+          const width = (360 - min) + max;
+          return Math.round(mapRange(val - min, 0, width, 1, 127));
+        } else if (val <= max) {
+          const width = (360 - min) + max;
+          return Math.round(mapRange((360 - min) + val, 0, width, 1, 127));
+        } else {
+          // Dead zone -> clamp to closest
+          const distToMin = Math.abs(val - min);
+          const distToMax = Math.abs(val - max);
+          return distToMin < distToMax ? 1 : 127;
+        }
       }
     }
 
@@ -1514,27 +1588,34 @@
       }
     }
 
-    function mapRange(value, inMin, inMax, outMin, outMax) {
-      return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+    // Update Ranges Sliders State and text live
+    function updateRangeSlidersUI(type) {
+      const minVal = Number(document.getElementById(`range-${type}-min`).value);
+      const maxVal = Number(document.getElementById(`range-${type}-max`).value);
+
+      state.effectiveRange.Right[type].min = minVal;
+      state.effectiveRange.Right[type].max = maxVal;
+
+      document.getElementById(`lbl-range-${type}`).textContent = `${minVal}° 〜 ${maxVal}°`;
     }
 
     // =================================================================
     // 6. SPATIAL DRUM IMPACTS & PROGRAM CONTROLLER
     // =================================================================
     function triggerSpatialDrumHit(side, noteNum, velocity) {
-      // 1. Direct Web MIDI output (Note On -> Note Off gate)
+      // Web MIDI output
       if (state.midiOutput) {
         try {
           // Note On (Ch 1): [0x90, Note, Vel]
           state.midiOutput.send([0x90, noteNum, velocity]);
           addLog("AIR DRUM", `HIT Note: <span class="log-highlight">${noteNum}</span> (Vel: ${velocity})`, "hit");
 
-          // Note Off gate timer (80ms standard drum envelope cut)
+          // Auto-cut note after 80ms to avoid ring-outs
           setTimeout(() => {
             if (state.midiOutput) {
               state.midiOutput.send([0x80, noteNum, 0]);
             }
-          }, 800);
+          }, 80);
         } catch(err) {
           addLog("System", `Air Drum MIDI send failed: ${err.message}`, "system");
         }
@@ -1542,14 +1623,13 @@
         addLog("AIR DRUM", `[Simulated Hit] Note: ${noteNum} (Vel: ${velocity})`, "hit");
       }
 
-      // 2. Animate 3D neon sector node explosion
-      const sectorIndex = noteNum - 60; // Sector index 0 ~ 17
+      // Animate 3D neon sector node explosion
+      const sectorIndex = noteNum - 60; 
       if (sectorIndex >= 0 && sectorIndex <= 17) {
         trigger3DDrumFlash(sectorIndex);
       }
 
-      // 3. Audio Synth beep
-      playAudioBeep(side, 300 + (sectorIndex * 50), 0.1);
+      playAudioBeep(side, 250 + (sectorIndex * 40), 0.12);
     }
 
     function changeKP2Program(delta) {
@@ -1557,15 +1637,14 @@
       if (state.kp2Program > 100) state.kp2Program = 1;
       if (state.kp2Program < 1)   state.kp2Program = 100;
 
-      // Send Program Change status byte: 0xC0 + Ch.1 (0) -> [0xC0, ProgramNum]
+      // Program Change [0xC0, ProgramVal 0-99]
       if (state.midiOutput) {
         try {
-          // KP2 program 1-100 mapped to hex program values 0-99
           const valToSend = state.kp2Program - 1;
           state.midiOutput.send([0xC0, valToSend]);
           addLog("KP2 MIDI", `Program Change -> Set: <span class="log-highlight">${state.kp2Program}</span>`, "system");
         } catch(err) {
-          console.error("MIDI PC send failed:", err);
+          console.error("MIDI Program change failed:", err);
         }
       } else {
         addLog("KP2 MIDI", `[Simulated PC] Program: ${state.kp2Program}`, "system");
@@ -1579,7 +1658,7 @@
         valText.textContent = state.kp2Program;
       }
 
-      playAudioBeep("Right", 1200, 0.08);
+      playAudioBeep("Right", 1100, 0.08);
     }
 
     // =================================================================
@@ -1628,7 +1707,6 @@
 
       select.innerHTML = html;
 
-      // Auto-select first MIDI target
       if (!state.midiOutput && outputs.size > 0) {
         const firstPort = outputs.values().next().value;
         state.midiOutput = firstPort;
@@ -1660,7 +1738,6 @@
         let side = [12, 13, 92].includes(ccNumber) ? 'Right' : 'Left';
         let key = ccNumber === 12 ? 'pan' : ccNumber === 13 ? 'tilt' : ccNumber === 92 ? 'touch' : ccNumber === 10 ? 'pan' : ccNumber === 20 ? 'dolly' : 'tilt';
         
-        // Anti-flooding: Only send when changed
         if (val !== state.lastCCSent[side][key]) {
           try {
             state.midiOutput.send([0xB0, ccNumber, val]);
@@ -1673,7 +1750,7 @@
     }
 
     function sendKP2ButtonTouch(isTouched) {
-      if (state.isPadTouched === isTouched) return; // Prevent duplicates
+      if (state.isPadTouched === isTouched) return;
 
       const touchVal = isTouched ? 127 : 0;
       const box = document.getElementById("box-pad-touch");
@@ -1696,7 +1773,6 @@
 
       state.isPadTouched = isTouched;
 
-      // Stream direct Touch CC92
       if (state.midiOutput) {
         try {
           state.midiOutput.send([0xB0, 92, touchVal]);
@@ -1780,7 +1856,7 @@
     }
 
     // =================================================================
-    // 10. INTEGRATED DEGUB SIMULATOR & KEYBOARD TRIGGERS
+    // 10. INTEGRATED DEBUG SIMULATOR & KEYBOARD TRIGGERS
     // =================================================================
     function setupKP2PadSimulator() {
       const pad = document.getElementById("kp2-pad");
@@ -1813,29 +1889,20 @@
         const panVal = Math.round((x / rect.width) * 127);
         const tiltVal = Math.round((1 - (y / rect.height)) * 127);
 
-        // Update displays
-        document.getElementById("val-Right-pan-raw").textContent = panVal;
-        document.getElementById("val-Right-tilt-raw").textContent = tiltVal;
-        updateSensorUI("Right", "pan", panVal);
-        updateSensorUI("Right", "tilt", tiltVal);
+        // Convert to absolute angles for simulator feed
+        const simAbsRoll = Math.round(mapRange(panVal, 0, 127, 0, 360));
+        const simAbsPitch = Math.round(mapRange(tiltVal, 0, 127, 0, 360));
 
         // Sync simulator sliders
-        document.getElementById("sim-roll").value = panVal;
-        document.getElementById("lbl-sim-roll").textContent = panVal;
-        document.getElementById("sim-pitch").value = tiltVal;
-        document.getElementById("lbl-sim-pitch").textContent = tiltVal;
+        document.getElementById("sim-roll").value = simAbsRoll;
+        document.getElementById("lbl-sim-roll").textContent = simAbsRoll + "°";
+        document.getElementById("sim-pitch").value = simAbsPitch;
+        document.getElementById("lbl-sim-pitch").textContent = simAbsPitch + "°";
 
-        // Apply simulated angles to Right Quaternion for visual feedback
-        const rollRad = mapRange(panVal, 0, 127, -Math.PI/2, Math.PI/2);
-        const pitchRad = mapRange(tiltVal, 0, 127, -Math.PI/3, Math.PI/3);
-        state.quaternions.Right.setFromEuler(new THREE.Euler(pitchRad, 0, rollRad, 'YXY'));
-
-        // Send MIDI
-        streamKP2CC(12, panVal);
-        streamKP2CC(13, tiltVal);
+        // Handle through telemetry pipeline to test mapping and visualizer
+        handleTelemetry("Right", 0, 0, -1, 0, 0, 0, [0, 0, -1, 0, 0, 0, state.isPadTouched ? 1 : 0]);
       }
 
-      // Drag mouse
       pad.addEventListener('mousedown', (e) => {
         isDragging = true;
         sendKP2ButtonTouch(true);
@@ -1855,7 +1922,6 @@
         }
       });
 
-      // Mobile touch
       pad.addEventListener('touchstart', (e) => {
         sendKP2ButtonTouch(true);
         updatePointerFromEvent(e);
@@ -1867,7 +1933,6 @@
         sendKP2ButtonTouch(false);
       });
 
-      // Button Touch Gate
       touchBtn.addEventListener('mousedown', () => sendKP2ButtonTouch(true));
       window.addEventListener('mouseup', () => {
         if (state.isPadTouched && !isDragging) sendKP2ButtonTouch(false);
@@ -1877,38 +1942,31 @@
       touchBtn.addEventListener('touchend', () => sendKP2ButtonTouch(false));
     }
 
-    // Hand orientation slider simulation
     function simulateWristChange() {
       const rollVal = Number(document.getElementById("sim-roll").value);
       const pitchVal = Number(document.getElementById("sim-pitch").value);
       
-      document.getElementById("lbl-sim-roll").textContent = rollVal;
-      document.getElementById("lbl-sim-pitch").textContent = pitchVal;
+      document.getElementById("lbl-sim-roll").textContent = rollVal + "°";
+      document.getElementById("lbl-sim-pitch").textContent = pitchVal + "°";
 
-      // Update right hand coordinates
-      document.getElementById("val-Right-pan-raw").textContent = rollVal;
-      document.getElementById("val-Right-tilt-raw").textContent = pitchVal;
-      updateSensorUI("Right", "pan", rollVal);
-      updateSensorUI("Right", "tilt", pitchVal);
-
-      // Map to angles
-      const rollRad = mapRange(rollVal, 0, 127, -Math.PI/2, Math.PI/2);
-      const pitchRad = mapRange(pitchVal, 0, 127, -Math.PI/3, Math.PI/3);
+      // Directly update estimated orientation angles for simulated visualization
+      const rollRad = (rollVal - 180) * Math.PI / 180;
+      const pitchRad = (pitchVal - 180) * Math.PI / 180;
       state.quaternions.Right.setFromEuler(new THREE.Euler(pitchRad, 0, rollRad, 'YXZ'));
 
-      // Move pad simulation pointer
+      // Forward into mapping pipeline
+      handleTelemetry("Right", 0, 0, -1, 0, 0, 0, [0, 0, -1, 0, 0, 0, state.isPadTouched ? 1 : 0]);
+
+      // Update simulator pad pointer visual
       const pad = document.getElementById("kp2-pad");
       const pointer = document.getElementById("pad-pointer");
-      if (pad && pointer) {
+      if (pad && pointer && state.lastCCSent.Right.pan !== -1) {
         const rect = pad.getBoundingClientRect();
-        const x = (rollVal / 127) * rect.width;
-        const y = (1 - (pitchVal / 127)) * rect.height;
+        const x = (state.lastCCSent.Right.pan / 127) * rect.width;
+        const y = (1 - (state.lastCCSent.Right.tilt / 127)) * rect.height;
         pointer.style.left = `${x}px`;
         pointer.style.top = `${y}px`;
       }
-
-      streamKP2CC(12, rollVal);
-      streamKP2CC(13, pitchVal);
     }
 
     function simulateOnboardAttack() {
@@ -1916,19 +1974,15 @@
       triggerSpatialDrumHit("Right", note, 110);
     }
 
-    // Keyboard keys for quick testing
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT') return;
 
       const key = e.key.toLowerCase();
       if (key === 'c') {
-        // Circle CW Program Increment
         changeKP2Program(1);
       } else if (key === 'v') {
-        // Circle CCW Program Decrement
         changeKP2Program(-1);
       } else if (key === 'r') {
-        // Calibrate Thrust
         resetAttitudeCalibration('Right');
         resetAttitudeCalibration('Left');
       }
@@ -1944,7 +1998,7 @@
       initMIDI();
       setupKP2PadSimulator();
 
-      addLog("System", "Antigravity KP2 Hybrid Master Dashboard loaded. Ready for 3D air performance.", "system");
+      addLog("System", "Antigravity KP2 Hybrid Master Dashboard loaded. Ready for 3D performance.", "system");
 
       document.body.addEventListener('click', () => {
         initAudioContext();
