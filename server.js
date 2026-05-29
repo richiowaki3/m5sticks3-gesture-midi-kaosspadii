@@ -1,33 +1,41 @@
 const dgram = require('dgram');
 const WebSocket = require('ws');
 const os = require('os');
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
 // 設定
+const PORT = 8080; // HTTPとWebSocketで共用
 const UDP_PORT = 8000;
-const WS_PORT = 8080;
 
-// WebSocketサーバーの起動
-const wss = new WebSocket.Server({ port: WS_PORT });
-console.log(`[WebSocket] Server running on ws://localhost:${WS_PORT}`);
-
-// 自身のローカルIPアドレスを表示（ユーザーが設定しやすいように）
-const networkInterfaces = os.networkInterfaces();
-console.log('\n--- 💡 ネットワーク設定用IPアドレス一覧 ---');
-for (const interfaceName in networkInterfaces) {
-  for (const net of networkInterfaces[interfaceName]) {
-    if (net.family === 'IPv4' && !net.internal) {
-      console.log(`  PCのIPアドレス: ${net.address}`);
-    }
+// HTTPサーバーの作成 (index.htmlを配信)
+const server = http.createServer((req, res) => {
+  // ルートまたはindex.htmlへのリクエストに対してファイルを返す
+  if (req.url === '/' || req.url === '/index.html') {
+    fs.readFile(path.join(__dirname, 'index.html'), 'utf8', (err, data) => {
+      if (err) {
+        res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('index.html の読み込みに失敗しました。ファイルが存在するか確認してください。');
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(data);
+    });
+  } else {
+    res.writeHead(404);
+    res.end('Not Found');
   }
-}
-console.log('-------------------------------------------\n');
+});
 
-// 接続中のクライアント一覧
+// WebSocketサーバーをHTTPサーバーに統合
+const wss = new WebSocket.Server({ server });
+
 const clients = new Set();
 
 wss.on('connection', (ws) => {
   clients.add(ws);
-  console.log(`[WebSocket] スマホ/ブラウザが接続されました。 (接続数: ${clients.size})`);
+  console.log(`[WebSocket] ブラウザが接続されました。 (接続数: ${clients.size})`);
   
   ws.on('close', () => {
     clients.delete(ws);
@@ -112,11 +120,9 @@ const udpServer = dgram.createSocket('udp4');
 udpServer.on('message', (msg, rinfo) => {
   const oscData = parseOSC(msg);
   if (oscData) {
-    // センサーデータは量が多いのでジェスチャー受信時のみコンソールに表示
     if (oscData.address.endsWith('/gesture')) {
-      console.log(`[OSC Gesture] アドレス: ${oscData.address}, データ: ${JSON.stringify(oscData.args)}`);
+      console.log(`[OSC Gesture] アドレス: ${oscData.address}, - データ: ${JSON.stringify(oscData.args)}`);
     }
-    
     // クライアント(ブラウザ)へブロードキャスト
     broadcast(oscData);
   }
@@ -125,7 +131,21 @@ udpServer.on('message', (msg, rinfo) => {
 udpServer.on('listening', () => {
   const address = udpServer.address();
   console.log(`[UDP/OSC] サーバーが ${address.address}:${address.port} で起動しました。`);
-  console.log('M5StickS3の outIp に上記「PCのIPアドレス」を設定してください。\n');
 });
 
 udpServer.bind(UDP_PORT);
+
+// HTTP & WebSocketサーバーを起動
+server.listen(PORT, () => {
+  console.log(`[Server] HTTP & WebSocket Server running on http://localhost:${PORT}`);
+  console.log('\n--- 💡 ネットワーク設定用IPアドレス一覧 ---');
+  const networkInterfaces = os.networkInterfaces();
+  for (const interfaceName in networkInterfaces) {
+    for (const net of networkInterfaces[interfaceName]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        console.log(`  スマホのIPアドレス: ${net.address}`);
+      }
+    }
+  }
+  console.log('-------------------------------------------\n');
+});
