@@ -144,6 +144,12 @@
       box-shadow: 0 0 25px rgba(255, 0, 85, 0.12), 0 20px 45px rgba(0, 0, 0, 0.6);
     }
 
+    .hand-card.flash-active {
+      background-color: rgba(255, 0, 85, 0.3) !important;
+      border-color: var(--color-right) !important;
+      box-shadow: 0 0 40px var(--color-right-glow) !important;
+    }
+
     .hand-header {
       display: flex;
       justify-content: space-between;
@@ -330,40 +336,146 @@
       font-weight: bold;
     }
 
+    /* Range Visual Neon Gauge CSS (Matches hand-drawn concept) */
     .range-selector-box {
       margin-top: 0.6rem;
       background: rgba(0, 0, 0, 0.35);
-      border-radius: 14px;
+      border-radius: 16px;
       border: 1px solid rgba(255, 255, 255, 0.03);
-      padding: 0.6rem 0.8rem;
+      padding: 0.8rem;
     }
     .range-title {
-      font-size: 0.65rem;
+      font-size: 0.68rem;
       color: var(--text-sub);
       text-transform: uppercase;
       font-weight: bold;
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.5rem;
       display: flex;
       justify-content: space-between;
     }
-    .range-inputs {
+    
+    /* Neon track bar */
+    .range-gauge-track {
+      height: 12px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 50px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 0.6rem;
+      border: 1px solid rgba(255,255,255,0.02);
+    }
+    .range-gauge-fill {
+      height: 100%;
+      position: absolute;
+      background: var(--color-right);
+      box-shadow: 0 0 12px var(--color-right-glow);
+      border-radius: 50px;
+      transition: left 0.1s ease, width 0.1s ease;
+    }
+    .left-hand .range-gauge-fill {
+      background: var(--color-left);
+      box-shadow: 0 0 12px var(--color-left-glow);
+    }
+    .range-gauge-current-marker {
+      width: 4px;
+      height: 100%;
+      background: #ffffff;
+      box-shadow: 0 0 8px #ffffff;
+      position: absolute;
+      top: 0;
+      transition: left 0.05s linear;
+    }
+    /* Double Range Slider Styling */
+    .slider-track-container {
+      position: relative;
+      width: 100%;
+      height: 28px;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      margin-bottom: 0.4rem;
     }
-    .range-inputs span {
+    .slider-track-container .range-gauge-track {
+      position: absolute;
+      width: 100%;
+      height: 12px;
+      margin-bottom: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .double-range-slider {
+      position: absolute;
+      width: 100%;
+      height: 28px;
+      background: transparent;
+      pointer-events: none;
+      -webkit-appearance: none;
+      appearance: none;
+      outline: none;
+      margin: 0;
+      z-index: 2;
+    }
+    
+    /* Chrome, Safari, Edge */
+    .double-range-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.8), 0 0 4px rgba(255,255,255,0.8);
+      position: relative;
+      z-index: 5;
+      border: 2px solid var(--color-right);
+      transition: transform 0.1s;
+    }
+    .left-hand .double-range-slider::-webkit-slider-thumb {
+      border-color: var(--color-left);
+    }
+    .double-range-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+    .double-range-slider::-webkit-slider-runnable-track {
+      background: transparent;
+      border: none;
+    }
+
+    /* Firefox */
+    .double-range-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.8), 0 0 4px rgba(255,255,255,0.8);
+      border: 2px solid var(--color-right);
+      position: relative;
+      z-index: 5;
+      transition: transform 0.1s;
+    }
+    .left-hand .double-range-slider::-moz-range-thumb {
+      border-color: var(--color-left);
+    }
+    .double-range-slider::-moz-range-thumb:hover {
+      transform: scale(1.2);
+    }
+    .double-range-slider::-moz-range-track {
+      background: transparent;
+      border: none;
+    }
+
+    .range-values-footer {
+      display: flex;
+      justify-content: space-between;
       font-size: 0.65rem;
       color: var(--text-sub);
       font-family: monospace;
-    }
-    .range-slider-el {
-      flex: 1;
-      accent-color: #ff0055;
-      height: 6px;
-      cursor: pointer;
-    }
-    .left-hand .range-slider-el {
-      accent-color: #00f3ff;
+      font-weight: bold;
+      padding: 0 0.2rem;
     }
 
     .system-card {
@@ -447,7 +559,6 @@
       box-shadow: 0 6px 20px rgba(255, 0, 85, 0.3);
     }
 
-    /* Routing UI Blocks */
     .midi-routing-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -699,7 +810,7 @@
   <!-- Header Section -->
   <header>
     <h1>ANTIGRAVITY KP2 HYBRID MASTER</h1>
-    <div class="subtitle">KORG KAOSS PAD KP2 3D骨格空間制御システム (v2.3)</div>
+    <div class="subtitle">KORG KAOSS PAD KP2 3D骨格空間制御システム (v2.5)</div>
   </header>
 
   <!-- Dashboard Container -->
@@ -738,7 +849,7 @@
         </div>
         <div class="display-box">
           <div class="display-lbl">Tilt (Pitch 絶対角度)</div>
-          <div id="val-Left-tilt-raw" class="display-val" style="color: var(--color-left)">64</div>
+          <div id="val-Left-tilt-raw" class="display-val" style="color: var(--color-left)">180°</div>
         </div>
       </div>
 
@@ -818,7 +929,7 @@
         </button>
       </div>
 
-      <!-- Mapped 3D Axis CC Visualizers -->
+      <!-- Mapped 3D Axis CC Visualizers & Range Indicators -->
       <div class="sensor-monitor">
         
         <!-- Pad X Roll output and calibration slider -->
@@ -830,22 +941,30 @@
           <span id="val-Right-pan" class="sensor-value">64</span>
         </div>
 
-        <!-- Twist Angle Effective Range Sliders (Min/Max) -->
+        <!-- Twist Angle Effective Range Gauge Indicator (Matches hand-drawn drawing!) -->
         <div class="range-selector-box">
           <div class="range-title">
-            <span>ひねり (X) 有効角度範囲選定</span>
+            <span>ひねり範囲 (MIDI 1 ➔ 127)</span>
             <span id="lbl-range-roll">90° 〜 270°</span>
           </div>
-          <div class="range-inputs">
-            <span>Min</span>
-            <input type="range" id="range-roll-min" class="range-slider-el" min="0" max="360" value="90" oninput="updateRangeSlidersUI('roll')">
-            <span>Max</span>
-            <input type="range" id="range-roll-max" class="range-slider-el" min="0" max="360" value="270" oninput="updateRangeSlidersUI('roll')">
+          <div class="slider-track-container">
+            <!-- Visual Range Gauge Bar -->
+            <div class="range-gauge-track">
+              <div id="range-gauge-fill-roll" class="range-gauge-fill" style="left: 25%; width: 50%;"></div>
+              <div id="range-marker-roll" class="range-gauge-current-marker" style="left: 50%;"></div>
+            </div>
+            <!-- 重ね合わせたスライダー -->
+            <input type="range" id="range-roll-min" class="double-range-slider" min="0" max="360" value="90" oninput="updateRangeSlidersUI('roll')">
+            <input type="range" id="range-roll-max" class="double-range-slider" min="0" max="360" value="270" oninput="updateRangeSlidersUI('roll')">
+          </div>
+          <div class="range-values-footer">
+            <span>Min: <span id="lbl-val-roll-min" style="color: var(--color-right)">90°</span></span>
+            <span>Max: <span id="lbl-val-roll-max" style="color: var(--color-right)">270°</span></span>
           </div>
         </div>
 
         <!-- Pad Y Pitch output and calibration slider -->
-        <div class="sensor-row" style="margin-top: 1rem;">
+        <div class="sensor-row" style="margin-top: 1.2rem;">
           <span class="sensor-title">Pad Y (CC#13)</span>
           <div class="sensor-slider-container">
             <div id="slider-Right-tilt" class="sensor-slider-fill" style="width: 50%;"></div>
@@ -853,17 +972,25 @@
           <span id="val-Right-tilt" class="sensor-value">64</span>
         </div>
 
-        <!-- Tilt Angle Effective Range Sliders (Min/Max) -->
+        <!-- Tilt Angle Effective Range Gauge Indicator (Matches hand-drawn drawing!) -->
         <div class="range-selector-box">
           <div class="range-title">
-            <span>傾き (Y) 有効角度範囲選定</span>
+            <span>傾き範囲 (MIDI 1 ➔ 127)</span>
             <span id="lbl-range-pitch">120° 〜 240°</span>
           </div>
-          <div class="range-inputs">
-            <span>Min</span>
-            <input type="range" id="range-pitch-min" class="range-slider-el" min="0" max="360" value="120" oninput="updateRangeSlidersUI('pitch')">
-            <span>Max</span>
-            <input type="range" id="range-pitch-max" class="range-slider-el" min="0" max="360" value="240" oninput="updateRangeSlidersUI('pitch')">
+          <div class="slider-track-container">
+            <!-- Visual Range Gauge Bar -->
+            <div class="range-gauge-track">
+              <div id="range-gauge-fill-pitch" class="range-gauge-fill" style="left: 33.3%; width: 33.3%;"></div>
+              <div id="range-marker-pitch" class="range-gauge-current-marker" style="left: 50%;"></div>
+            </div>
+            <!-- 重ね合わせたスライダー -->
+            <input type="range" id="range-pitch-min" class="double-range-slider" min="0" max="360" value="120" oninput="updateRangeSlidersUI('pitch')">
+            <input type="range" id="range-pitch-max" class="double-range-slider" min="0" max="360" value="240" oninput="updateRangeSlidersUI('pitch')">
+          </div>
+          <div class="range-values-footer">
+            <span>Min: <span id="lbl-val-pitch-min" style="color: var(--color-right)">120°</span></span>
+            <span>Max: <span id="lbl-val-pitch-max" style="color: var(--color-right)">240°</span></span>
           </div>
         </div>
         
@@ -910,7 +1037,6 @@
           
           <div class="route-label-side">MIDI Output Channel</div>
           <select id="midi-chan-Left" class="form-select" onchange="onMidiChannelChange('Left')" style="padding: 0.5rem; font-size: 0.75rem; border-radius: 8px;">
-            <!-- Channels 1-16 -->
             <option value="1">Channel 1 (Default)</option>
             <option value="2">Channel 2</option>
             <option value="3">Channel 3</option>
@@ -942,7 +1068,6 @@
           
           <div class="route-label-side">MIDI Output Channel</div>
           <select id="midi-chan-Right" class="form-select" onchange="onMidiChannelChange('Right')" style="padding: 0.5rem; font-size: 0.75rem; border-radius: 8px;">
-            <!-- Channels 1-16 -->
             <option value="1" selected>Channel 1 (Default)</option>
             <option value="2">Channel 2</option>
             <option value="3">Channel 3</option>
@@ -1067,14 +1192,13 @@
         Right: 1
       },
       
-      // Attitude quaternions for Left and Right hands (Complementary Filter)
+      // Attitude quaternions (Estimated via Complementary Filter)
       quaternions: {
         Left: new THREE.Quaternion(),
         Right: new THREE.Quaternion()
       },
 
       // --- CIRCULAR WRAPPING CALIBRATION ENGINE ---
-      // Start posture orientation reference is locked at 180 degrees (Center)
       calibrationOffset: {
         Right: { roll: 180, pitch: 180 },
         Left: { pitch: 180 }
@@ -1101,8 +1225,12 @@
       // Right hand エフェクトプログラム (1 ~ 100)
       kp2Program: 1,
 
-      // Button / Touch State
+      // Button Touch State
       isPadTouched: false,
+      
+      // Fallback variables for older 6-parameter firmware
+      lastMoveTime: 0,
+      isAutoTouched: false,
       
       lastCCSent: {
         Left: { pan: -1, dolly: -1, tilt: -1 },
@@ -1120,7 +1248,6 @@
     const boneTips = { Left: null, Right: null };
     const m5Boxes = { Left: null, Right: null };
     
-    // Arrays to hold the 18 sectors guides mesh in the right hand visualizer
     const drumSectorsMesh = [];
 
     function initThreeJS(side) {
@@ -1154,13 +1281,11 @@
 
       const colorHex = side === 'Left' ? 0x00f3ff : 0xff0055;
 
-      // 1. Joint Base
       const baseGeo = new THREE.SphereGeometry(0.18, 16, 16);
       const baseMat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.8 });
       const baseMesh = new THREE.Mesh(baseGeo, baseMat);
       group.add(baseMesh);
 
-      // 2. Bone Vector
       const boneGeo = new THREE.CylinderGeometry(0.04, 0.06, CONFIG.boneLength, 8);
       boneGeo.rotateX(Math.PI / 2);
       boneGeo.translate(0, 0, -CONFIG.boneLength / 2);
@@ -1177,7 +1302,6 @@
       group.add(boneMesh);
       bones[side] = boneMesh; 
 
-      // 3. Joint Tip
       const tipGeo = new THREE.SphereGeometry(0.22, 16, 16);
       const tipMat = new THREE.MeshBasicMaterial({ 
         color: side === 'Left' ? 0x00f3ff : 0xffea00, 
@@ -1189,7 +1313,6 @@
       boneMesh.add(tipMesh); 
       boneTips[side] = tipMesh;
 
-      // 4. M5StickS3 Device Wireframe
       const boxGeo = new THREE.BoxGeometry(0.6, 0.22, 1.1);
       const boxMat = new THREE.MeshBasicMaterial({
         color: colorHex,
@@ -1206,7 +1329,6 @@
         build3DDrumHUD(scene);
       }
 
-      // Render loop
       function animate() {
         requestAnimationFrame(animate);
 
@@ -1228,7 +1350,6 @@
       });
     }
 
-    // 18分割ガイドサークルの3D空間生成
     function build3DDrumHUD(scene) {
       const radius = CONFIG.boneLength;
       const phiUpper = 30 * Math.PI / 180;
@@ -1270,7 +1391,6 @@
         addNeonNode(x, y, z, 8 + i);
       }
 
-      // Zenith / Nadir
       addNeonNode(0, radius, 0, 16);
       drumSectorsMesh[16].material.color.setHex(0xffea00);
       addNeonNode(0, -radius, 0, 17);
@@ -1477,7 +1597,7 @@
     // --- HIGH-PERFORMANCE OSC INTERRUPT ROUTER ---
     function routeOSCMessage(address, args) {
       const parts = address.split('/');
-      const side = parts[2]; // Left or Right
+      const side = parts[2]; 
       
       if (address.endsWith("/btnA")) {
         // Right hand physical Button A Touch Gate (Explicit CC#92)
@@ -1487,7 +1607,6 @@
         }
       } 
       else if (address.endsWith("/attack")) {
-        // Spatial 18-Sector Downward gravity drum hit
         const note = Number(args[0]);
         const vel = Number(args[1]);
         triggerSpatialDrumHit(side, note, vel);
@@ -1520,16 +1639,6 @@
         }
       }
     }
-
-    // Auto-timeout check for device connection state
-    setInterval(() => {
-      const now = Date.now();
-      ["Left", "Right"].forEach(side => {
-        if (state.lastDataReceived[side] > 0 && (now - state.lastDataReceived[side] > 2000)) {
-          setDeviceStatus(side, false);
-        }
-      });
-    }, 1000);
 
     // =================================================================
     // 5. HYBRID COORDINATE ESTIMATION ENGINE & MIDI MAPPING
@@ -1569,6 +1678,13 @@
       }
 
       state.quaternions[side].set(0, 0, 0, 1);
+      
+      // Visual feedback reset markers
+      const markerRoll = document.getElementById("range-marker-roll");
+      if (markerRoll) markerRoll.style.left = "50%";
+      const markerPitch = document.getElementById("range-marker-pitch");
+      if (markerPitch) markerPitch.style.left = "50%";
+
       playAudioBeep(side, 880, 0.2);
     }
 
@@ -1588,6 +1704,7 @@
         state.currentAbsoluteAngles.Right.roll = currentAbsRoll;
         state.currentAbsoluteAngles.Right.pitch = currentAbsPitch;
 
+        // Start posture locked at 180° (theta_rel = (current - calib + 180) % 360)
         let relRoll = (currentAbsRoll - state.calibrationOffset.Right.roll + 180 + 360) % 360;
         let relPitch = (currentAbsPitch - state.calibrationOffset.Right.pitch + 180 + 360) % 360;
 
@@ -1599,19 +1716,42 @@
         let finalRollCC = mapCircularRangeToMIDI(relRoll, rollMin, rollMax);
         let finalPitchCC = mapCircularRangeToMIDI(relPitch, pitchMin, pitchMax);
 
+        // Update display text
         document.getElementById("val-Right-pan-raw").textContent = relRoll.toFixed(0) + "°";
         document.getElementById("val-Right-tilt-raw").textContent = relPitch.toFixed(0) + "°";
         updateSensorUI("Right", "pan", finalRollCC);
         updateSensorUI("Right", "tilt", finalPitchCC);
 
+        // Update Visual range gauge current marker positions (0% to 100%)
+        const markerRoll = document.getElementById("range-marker-roll");
+        if (markerRoll) markerRoll.style.left = `${(relRoll / 360) * 100}%`;
+        const markerPitch = document.getElementById("range-marker-pitch");
+        if (markerPitch) markerPitch.style.left = `${(relPitch / 360) * 100}%`;
+
         // Stream CCs to Right MIDI Out Target
         streamKP2CC("Right", 12, finalRollCC); 
         streamKP2CC("Right", 13, finalPitchCC); 
 
-        // Touch Gate
+        // E. Touch Gate Selection
         if (rawArgs.length >= 7) {
+          // New firmware -> STRICT A Button Gate
           const btnPressed = Number(rawArgs[6]) === 1;
           sendKP2ButtonTouch(btnPressed);
+        } else {
+          // Old firmware -> Automatically fallback to motion-intensity Touch Gate (Auto-Touch)
+          const moveAmt = Math.abs(gyroX) + Math.abs(gyroY) + Math.abs(gyroZ);
+          const now = Date.now();
+          if (moveAmt > 22.0) {
+            state.lastMoveTime = now;
+            if (!state.isAutoTouched && !state.isPadTouched) {
+              sendKP2ButtonTouch(true);
+              state.isAutoTouched = true;
+            }
+          }
+          if (state.isAutoTouched && (now - state.lastMoveTime > 350)) {
+            sendKP2ButtonTouch(false);
+            state.isAutoTouched = false;
+          }
         }
 
       } else {
@@ -1669,6 +1809,22 @@
       }
     }
 
+    // --- HELPER MATH & UI UTILITIES ---
+    function mapRange(value, inMin, inMax, outMin, outMax) {
+      return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+    }
+
+    function updateSensorUI(side, type, ccVal) {
+      const slider = document.getElementById(`slider-${side}-${type}`);
+      const valText = document.getElementById(`val-${side}-${type}`);
+      if (slider) {
+        slider.style.width = `${(ccVal / 127) * 100}%`;
+      }
+      if (valText) {
+        valText.textContent = ccVal;
+      }
+    }
+
     function updateRangeSlidersUI(type) {
       const minVal = Number(document.getElementById(`range-${type}-min`).value);
       const maxVal = Number(document.getElementById(`range-${type}-max`).value);
@@ -1677,6 +1833,46 @@
       state.effectiveRange.Right[type].max = maxVal;
 
       document.getElementById(`lbl-range-${type}`).textContent = `${minVal}° 〜 ${maxVal}°`;
+      
+      // Update footer labels
+      const minLbl = document.getElementById(`lbl-val-${type}-min`);
+      const maxLbl = document.getElementById(`lbl-val-${type}-max`);
+      if (minLbl) minLbl.textContent = minVal + "°";
+      if (maxLbl) maxLbl.textContent = maxVal + "°";
+
+      // Update Visual Neon Gauge fill bounds with high-performance linear-gradient mapping
+      const fill = document.getElementById(`range-gauge-fill-${type}`);
+      if (fill) {
+        const minPct = (minVal / 360) * 100;
+        const maxPct = (maxVal / 360) * 100;
+        const colorHex = "#ff0055"; // Right hand color
+        const glow = "rgba(255, 0, 85, 0.4)";
+
+        if (minVal === maxVal) {
+          fill.style.left = "0%";
+          fill.style.width = "0%";
+          fill.style.background = "transparent";
+          fill.style.boxShadow = "none";
+        } else if (minVal < maxVal) {
+          fill.style.left = `${minPct}%`;
+          fill.style.width = `${maxPct - minPct}%`;
+          fill.style.background = colorHex;
+          fill.style.boxShadow = `0 0 12px ${glow}`;
+        } else {
+          // Wrapped-around range: light up both ends and keep the middle black
+          fill.style.left = "0%";
+          fill.style.width = "100%";
+          fill.style.background = `linear-gradient(to right, 
+            ${colorHex} 0%, 
+            ${colorHex} ${maxPct}%, 
+            transparent ${maxPct}%, 
+            transparent ${minPct}%, 
+            ${colorHex} ${minPct}%, 
+            ${colorHex} 100%
+          )`;
+          fill.style.boxShadow = `0 0 8px ${glow}`;
+        }
+      }
     }
 
     // =================================================================
@@ -1686,7 +1882,6 @@
       const targetOutput = state.midiOutputs[side];
       const targetChannel = state.midiChannels[side];
       
-      // Note On: 0x90 + (Channel - 1)
       const noteOnStatus = 0x90 + (targetChannel - 1);
       const noteOffStatus = 0x80 + (targetChannel - 1);
 
@@ -1723,7 +1918,6 @@
       const targetOutput = state.midiOutputs.Right;
       const targetChannel = state.midiChannels.Right;
       
-      // Program Change: 0xC0 + (Channel - 1)
       const pcStatus = 0xC0 + (targetChannel - 1);
 
       if (targetOutput) {
@@ -1800,13 +1994,11 @@
 
         select.innerHTML = html;
 
-        // Auto-select targets (Left -> First target, Right -> First target as well)
         if (!state.midiOutputs[side] && outputs.size > 0) {
           const portArray = Array.from(outputs.values());
-          // If U6MIDI Pro has multiple ports, select Port 1 for Right, Port 2 for Left
           let selectedPort = portArray[0];
           if (side === 'Left' && portArray.length > 1) {
-            selectedPort = portArray[1]; // Route Left stick to Port 2 if available!
+            selectedPort = portArray[1]; 
           }
           state.midiOutputs[side] = selectedPort;
           addLog("System", `Auto-routing [${side} Hand] -> <span class="log-highlight">${selectedPort.name}</span>`, "system");
@@ -1848,9 +2040,14 @@
         
         if (val !== state.lastCCSent[side][key]) {
           try {
-            // CC status: 0xB0 + (Channel - 1)
             const ccStatus = 0xB0 + (targetChannel - 1);
             targetOutput.send([ccStatus, ccNumber, val]);
+            
+            // Re-inject scroll logging inside stream, so you get exact feedback!
+            if (ccNumber !== 92) { // Skip flooding button state
+              addLog(`${side} MIDI`, `[CC#${ccNumber}] ➔ Value: <span class="log-highlight">${val}</span> [Ch: ${targetChannel}]`, side === 'Left' ? 'left' : 'right');
+            }
+            
             state.lastCCSent[side][key] = val;
           } catch (err) {
             console.error(`${side} Hand CC send failed:`, err);
@@ -1890,13 +2087,13 @@
         try {
           const ccStatus = 0xB0 + (targetChannel - 1);
           targetOutput.send([ccStatus, 92, touchVal]);
-          addLog("KP2 MIDI", `Pad Touch CC#92 -> Value: ${touchVal} [Ch: ${targetChannel}]`, "right");
+          addLog("KP2 Touch", `CC#92 -> Value: <span class="log-highlight">${touchVal}</span> [Ch: ${targetChannel}]`, "right");
           state.lastCCSent.Right.touch = touchVal;
         } catch (err) {
           addLog("System", `KP2 Touch failed: ${err.message}`, "system");
         }
       } else {
-        addLog("KP2 MIDI", `[Simulated Touch] CC#92 -> Value: ${touchVal} [Ch: ${targetChannel}]`, "system");
+        addLog("KP2 Touch", `[Simulated Touch] CC#92 -> Value: ${touchVal} [Ch: ${targetChannel}]`, "system");
       }
     }
 
@@ -2105,6 +2302,10 @@
       initWebSocketIP();
       initMIDI();
       setupKP2PadSimulator();
+
+      // Trigger initial slider UI update
+      updateRangeSlidersUI('roll');
+      updateRangeSlidersUI('pitch');
 
       addLog("System", "Antigravity KP2 Hybrid Master Dashboard loaded. Ready for 3D performance.", "system");
 
