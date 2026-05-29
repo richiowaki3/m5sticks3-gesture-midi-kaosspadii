@@ -386,11 +386,11 @@
       top: 0;
       transition: left 0.05s linear;
     }
-    /* Double Range Slider Styling */
+    /* Ultra Premium Double Range Slider (Matches provided image concept) */
     .slider-track-container {
       position: relative;
       width: 100%;
-      height: 28px;
+      height: 40px; /* Space for boundary thumbs to exceed top/bottom */
       display: flex;
       align-items: center;
       margin-bottom: 0.4rem;
@@ -398,74 +398,118 @@
     .slider-track-container .range-gauge-track {
       position: absolute;
       width: 100%;
-      height: 12px;
+      height: 8px; /* Track thickness */
+      background: #5a3322; /* Dark brown (Inactive zone) */
+      border-radius: 4px;
       margin-bottom: 0;
       pointer-events: none;
       z-index: 1;
     }
+    .range-gauge-fill {
+      height: 100%;
+      position: absolute;
+      background: #ebe5df; /* Soft ivory white (Active zone) */
+      border-radius: 4px;
+      transition: left 0.1s ease, width 0.1s ease;
+    }
     .double-range-slider {
       position: absolute;
       width: 100%;
-      height: 28px;
+      height: 40px;
       background: transparent;
       pointer-events: none;
       -webkit-appearance: none;
       appearance: none;
       outline: none;
       margin: 0;
-      z-index: 2;
+      z-index: 3;
     }
     
-    /* Chrome, Safari, Edge */
-    .double-range-slider::-webkit-slider-thumb {
+    /* Min Slider (Upper boundary, pointing down) */
+    .slider-min::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #ffffff;
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-top: 10px solid #ffffff; /* Downward white triangle */
       cursor: pointer;
       pointer-events: auto;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.8), 0 0 4px rgba(255,255,255,0.8);
+      margin-top: -14px; /* Offset above track */
       position: relative;
       z-index: 5;
-      border: 2px solid var(--color-right);
-      transition: transform 0.1s;
     }
-    .left-hand .double-range-slider::-webkit-slider-thumb {
-      border-color: var(--color-left);
-    }
-    .double-range-slider::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
-    }
-    .double-range-slider::-webkit-slider-runnable-track {
+    .slider-min::-moz-range-thumb {
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-top: 10px solid #ffffff;
+      cursor: pointer;
+      pointer-events: auto;
       background: transparent;
       border: none;
     }
 
-    /* Firefox */
-    .double-range-slider::-moz-range-thumb {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #ffffff;
+    /* Max Slider (Lower boundary, pointing up) */
+    .slider-max::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-bottom: 10px solid #ffffff; /* Upward white triangle */
       cursor: pointer;
       pointer-events: auto;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.8), 0 0 4px rgba(255,255,255,0.8);
-      border: 2px solid var(--color-right);
+      margin-top: 14px; /* Offset below track */
       position: relative;
       z-index: 5;
-      transition: transform 0.1s;
     }
-    .left-hand .double-range-slider::-moz-range-thumb {
-      border-color: var(--color-left);
+    .slider-max::-moz-range-thumb {
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-bottom: 10px solid #ffffff;
+      cursor: pointer;
+      pointer-events: auto;
+      background: transparent;
+      border: none;
     }
-    .double-range-slider::-moz-range-thumb:hover {
-      transform: scale(1.2);
+
+    .double-range-slider::-webkit-slider-runnable-track {
+      background: transparent;
+      border: none;
     }
     .double-range-slider::-moz-range-track {
       background: transparent;
       border: none;
+    }
+
+    /* Currently Estimated Value Knob (Terracotta Orange circle with a top tick line) */
+    .custom-val-knob {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #d88155; /* Terracotta orange */
+      box-shadow: 0 0 8px rgba(216, 129, 85, 0.7);
+      pointer-events: none;
+      z-index: 2;
+      transform: translate(-50%, -50%);
+      top: 50%;
+      transition: left 0.05s linear;
+      display: flex;
+      justify-content: center;
+    }
+    .knob-tick {
+      width: 2px;
+      height: 6px;
+      background: #d88155;
+      position: absolute;
+      top: -5px;
     }
 
     .range-values-footer {
@@ -951,11 +995,14 @@
             <!-- Visual Range Gauge Bar -->
             <div class="range-gauge-track">
               <div id="range-gauge-fill-roll" class="range-gauge-fill" style="left: 25%; width: 50%;"></div>
-              <div id="range-marker-roll" class="range-gauge-current-marker" style="left: 50%;"></div>
             </div>
-            <!-- 重ね合わせたスライダー -->
-            <input type="range" id="range-roll-min" class="double-range-slider" min="0" max="360" value="90" oninput="updateRangeSlidersUI('roll')">
-            <input type="range" id="range-roll-max" class="double-range-slider" min="0" max="360" value="270" oninput="updateRangeSlidersUI('roll')">
+            <!-- 現在値を表す突起付き丸ノブ -->
+            <div id="range-marker-roll" class="custom-val-knob" style="left: 50%;">
+              <div class="knob-tick"></div>
+            </div>
+            <!-- 重ね合わせた境界スライダー -->
+            <input type="range" id="range-roll-min" class="double-range-slider slider-min" min="0" max="360" value="90" oninput="updateRangeSlidersUI('roll')">
+            <input type="range" id="range-roll-max" class="double-range-slider slider-max" min="0" max="360" value="270" oninput="updateRangeSlidersUI('roll')">
           </div>
           <div class="range-values-footer">
             <span>Min: <span id="lbl-val-roll-min" style="color: var(--color-right)">90°</span></span>
@@ -982,11 +1029,14 @@
             <!-- Visual Range Gauge Bar -->
             <div class="range-gauge-track">
               <div id="range-gauge-fill-pitch" class="range-gauge-fill" style="left: 33.3%; width: 33.3%;"></div>
-              <div id="range-marker-pitch" class="range-gauge-current-marker" style="left: 50%;"></div>
             </div>
-            <!-- 重ね合わせたスライダー -->
-            <input type="range" id="range-pitch-min" class="double-range-slider" min="0" max="360" value="120" oninput="updateRangeSlidersUI('pitch')">
-            <input type="range" id="range-pitch-max" class="double-range-slider" min="0" max="360" value="240" oninput="updateRangeSlidersUI('pitch')">
+            <!-- 現在値を表す突起付き丸ノブ -->
+            <div id="range-marker-pitch" class="custom-val-knob" style="left: 50%;">
+              <div class="knob-tick"></div>
+            </div>
+            <!-- 重ね合わせた境界スライダー -->
+            <input type="range" id="range-pitch-min" class="double-range-slider slider-min" min="0" max="360" value="120" oninput="updateRangeSlidersUI('pitch')">
+            <input type="range" id="range-pitch-max" class="double-range-slider slider-max" min="0" max="360" value="240" oninput="updateRangeSlidersUI('pitch')">
           </div>
           <div class="range-values-footer">
             <span>Min: <span id="lbl-val-pitch-min" style="color: var(--color-right)">120°</span></span>
@@ -1845,32 +1895,29 @@
       if (fill) {
         const minPct = (minVal / 360) * 100;
         const maxPct = (maxVal / 360) * 100;
-        const colorHex = "#ff0055"; // Right hand color
-        const glow = "rgba(255, 0, 85, 0.4)";
+        const validColor = "#ebe5df"; // Soft ivory white for active
+        const invalidColor = "#5a3322"; // Dark brown for inactive (handled by track background, transparent here)
 
         if (minVal === maxVal) {
           fill.style.left = "0%";
           fill.style.width = "0%";
           fill.style.background = "transparent";
-          fill.style.boxShadow = "none";
         } else if (minVal < maxVal) {
           fill.style.left = `${minPct}%`;
           fill.style.width = `${maxPct - minPct}%`;
-          fill.style.background = colorHex;
-          fill.style.boxShadow = `0 0 12px ${glow}`;
+          fill.style.background = validColor;
         } else {
-          // Wrapped-around range: light up both ends and keep the middle black
+          // Wrapped-around range: light up both ends and keep the middle transparent (showing dark brown track)
           fill.style.left = "0%";
           fill.style.width = "100%";
           fill.style.background = `linear-gradient(to right, 
-            ${colorHex} 0%, 
-            ${colorHex} ${maxPct}%, 
+            ${validColor} 0%, 
+            ${validColor} ${maxPct}%, 
             transparent ${maxPct}%, 
             transparent ${minPct}%, 
-            ${colorHex} ${minPct}%, 
-            ${colorHex} 100%
+            ${validColor} ${minPct}%, 
+            ${validColor} 100%
           )`;
-          fill.style.boxShadow = `0 0 8px ${glow}`;
         }
       }
     }
