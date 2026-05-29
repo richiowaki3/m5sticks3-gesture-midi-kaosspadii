@@ -1,15 +1,12 @@
 /**
  * @file m5_sender.ino
- * @brief M5StickS3 OSC Sender for Antigravity Gesture & MIDI System
- * @details M5StickS3の6軸センサーデータ(15ms毎)およびジェスチャー確定データを、
- *          Wi-Fiを経由してOSC (UDP) パケットでスマホ（または中継ブリッジ）へ送信します。
- *          左右の切り替えはスケッチ冒頭の設定変数を書き換えるだけで対応可能です。
+ * @brief Antigravity KP2 Hybrid Master - Dedicated M5StickS3 FirmWare
+ * @details M5StickS3のオンボード上で超低遅延ジェスチャー判定および
+ *          「重力参照型・空間18分割アタックドラム」、「Oジェスチャー（円運動）」、
+ *          「緊急ボタンA割り込みゲート」を処理し、OSCで中継サーバーへ送信します。
  * 
- * Hardware: M5StickS3 (M5Unifiedライブラリにより、StickC / Plus / Plus2等の旧機種にも互換)
- * 
- * 必要なライブラリ (Arduino IDEのライブラリマネージャからインストールしてください):
- *   1. M5Unified (by M5Stack)
- *   2. OSC (by Adrian Freed and Yotam Mann - CNMAT製)
+ * Hardware: M5StickS3 (M5Unified対応)
+ * 必要なライブラリ: M5Unified, OSC
  */
 
 #include <WiFi.h>
@@ -18,67 +15,74 @@
 #include <M5Unified.h>
 
 // =================================================================
-// 1. Wi-Fi & 送信先 (スマホ / PCブリッジ) 設定
+// 1. Wi-Fi & 送信先設定 (ご利用環境に合わせて調整してください)
 // =================================================================
-const char* ssid     = "Buffalo-G-A52A";   // ご利用のWi-FiルーターのSSID
-const char* password = "password1234";     // Wi-Fiのパスワード
+const char* ssid     = "Buffalo-G-A52A";   
+const char* password = "password1234";     
+const char* outIp    = "192.168.11.10";    // スマホまたはPCのブリッジIP
+const int outPort    = 8000;               // 受信ポート
 
-// 送信先 (スマホのIP、またはPCで中継サーバーを動かしている場合はPCのIP)
-const char* outIp    = "192.168.11.10";      // 送信先のIPアドレス (スマホIP)
-const int outPort    = 8000;                // 受信ポート (通常 8000)
-
-// =================================================================
-// 2. 左右デバイス識別設定
-// =================================================================
-// 右手用の場合は "Right"、左手用の場合は "Left" に書き換えてください。
+// 右手用は "Right"、左手用は "Left" に書き換えてください。
 const String deviceSide = "Right"; 
 
 // =================================================================
-// 3. 通信オブジェクト & 内部状態
+// 2. 通信オブジェクト & 内部状態
 // =================================================================
 WiFiUDP Udp;
 IPAddress targetIp;
 
-// 15ms周期タイマー用
 unsigned long lastSensorTime = 0;
-const unsigned long SENSOR_PERIOD_MS = 15; 
+const unsigned long SENSOR_PERIOD_MS = 15; // 15ms周期ストリーミング
 
-// OSC送信用のアドレス文字列
-String oscSensorAddress;
-String oscGestureAddress;
+// OSC送信用アドレス
+String oscTeleAddress;    // /m5/[Side]
+String oscBtnAddress;     // /m5/[Side]/btnA
+String oscAtkAddress;     // /m5/[Side]/attack
+String oscGestAddress;    // /m5/[Side]/gesture
+
+// ボタンAのチャタリング・ゲート制御用
+bool lastBtnAState = false;
+
+// ジェスチャ用クールダウンタイマー
+unsigned long lastAttackTime = 0;
+unsigned long lastThrustTime = 0;
+const unsigned long GESTURE_COOLDOWN_MS = 300; 
+
+// 円運動 (Oジェスチャー) 判定バッファ
+float lastAngle = 0;
+float accumulatedAngle = 0;
+unsigned long circleTimer = 0;
 
 // =================================================================
-// SETUP: 初期化処理
+// SETUP: 初期化
 // =================================================================
 void setup() {
-  // M5Unifiedの初期設定
   auto cfg = M5.config();
   M5.begin(cfg);
 
-  // シリアル通信初期化 (デバッグモニター用)
   Serial.begin(115200);
   delay(500);
-  Serial.println("\n--- M5StickS3 OSC Sender Initializing ---");
+  Serial.println("\n--- Antigravity KP2 Hybrid Master IMU Sender Setup ---");
 
-  // LCD画面の初期設定
+  // LCD初期表示
   M5.Lcd.init();
-  M5.Lcd.setRotation(1); // 横向き
+  M5.Lcd.setRotation(1); 
   M5.Lcd.fillScreen(BLACK);
-  M5.Lcd.setTextDatum(MC_DATUM); // 中央基準
+  M5.Lcd.setTextDatum(MC_DATUM);
   M5.Lcd.setTextSize(1.5);
   M5.Lcd.setTextColor(WHITE);
-
   M5.Lcd.drawString("WiFi Connecting...", 120, 68);
 
-  // OSC送信用アドレスの構築
-  // 例: "/m5/Right" および "/m5/Right/gesture"
-  oscSensorAddress = "/m5/" + deviceSide;
-  oscGestureAddress = "/m5/" + deviceSide + "/gesture";
+  // アドレス構築
+  oscTeleAddress = "/m5/" + deviceSide;
+  oscBtnAddress  = "/m5/" + deviceSide + "/btnA";
+  oscAtkAddress  = "/m5/" + deviceSide + "/attack";
+  oscGestAddress = "/m5/" + deviceSide + "/gesture";
 
-  // Wi-Fi接続処理
+  // Wi-Fi 接続
   WiFi.begin(ssid, password);
   int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+  while (WiFi.status() != WL_CONNECTED && attempts < 15) {
     delay(500);
     Serial.print(".");
     attempts++;
@@ -86,38 +90,31 @@ void setup() {
 
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("\n[WiFi] Connected!");
-    Serial.print("[WiFi] IP Address: ");
-    Serial.println(WiFi.localIP());
-    
     M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setTextColor(GREEN);
-    M5.Lcd.drawString("WiFi OK", 120, 40);
+    M5.Lcd.drawString("WiFi CONNECTED", 120, 35);
     M5.Lcd.setTextColor(WHITE);
     M5.Lcd.setTextSize(1.2);
     M5.Lcd.drawString(WiFi.localIP().toString(), 120, 70);
-    M5.Lcd.drawString("Side: " + deviceSide, 120, 95);
+    M5.Lcd.drawString("Side: " + deviceSide + " (KP2 Hybrid)", 120, 100);
   } else {
-    Serial.println("\n[WiFi] Connection Failed. Run in Offline Mode.");
+    Serial.println("\n[WiFi] Connection Failed. Offline Mode.");
     M5.Lcd.fillScreen(RED);
     M5.Lcd.drawString("WiFi Failed!", 120, 68);
   }
 
-  // UDPオブジェクトの開始
-  Udp.begin(8888); // ローカル待ち受け用ポート（ダミー）
+  Udp.begin(8888);
   targetIp.fromString(outIp);
 
-  // 内蔵IMU（6軸センサー）の起動チェック
   if (!M5.Imu.isEnabled()) {
-    Serial.println("[IMU] Error: IMU not found!");
+    Serial.println("[IMU] Error: Not Found!");
     M5.Lcd.fillScreen(RED);
     M5.Lcd.drawString("IMU ERROR", 120, 68);
     while (1) { delay(100); }
   }
 
-  Serial.println("[System] OSC Sender Setup Complete.");
-  delay(1500);
-  
-  // メイン画面の描画
+  Serial.println("[System] Hybrid OSC Setup Complete.");
+  delay(1000);
   drawMainUI();
 }
 
@@ -125,13 +122,20 @@ void setup() {
 // LOOP: メインループ
 // =================================================================
 void loop() {
-  // M5ボタン・各種状態アップデート
   M5.update();
-
   unsigned long now = millis();
 
   // -------------------------------------------------------------
-  // A. 15ms毎の定期センサーデータ送信 (accX, accY, accZ, gyroX, gyroY, gyroZ)
+  // A. 物理ボタンA (BtnA) ➔ 緊急割り込み型ゲートOSC
+  // -------------------------------------------------------------
+  bool currentBtnAState = M5.BtnA.isPressed();
+  if (currentBtnAState != lastBtnAState) {
+    lastBtnAState = currentBtnAState;
+    sendOSCBtnState(currentBtnAState ? 1 : 0);
+  }
+
+  // -------------------------------------------------------------
+  // B. 15ms毎の定期テレメトリストリーミング (6-Axis + BtnA)
   // -------------------------------------------------------------
   if (now - lastSensorTime >= SENSOR_PERIOD_MS) {
     lastSensorTime = now;
@@ -139,153 +143,249 @@ void loop() {
     float accX = 0, accY = 0, accZ = 0;
     float gyroX = 0, gyroY = 0, gyroZ = 0;
 
-    // センサー値を取得
     M5.Imu.getAccel(&accX, &accY, &accZ);
     M5.Imu.getGyro(&gyroX, &gyroY, &gyroZ);
 
-    // OSCメッセージの構築
-    OSCMessage msg(oscSensorAddress.c_str());
-    msg.add(accX);
-    msg.add(accY);
-    msg.add(accZ);
-    msg.add(gyroX);
-    msg.add(gyroY);
-    msg.add(gyroZ);
+    // 7番目の引数としてボタン状態 (1: 押下、0: 解放) を付与
+    OSCMessage teleMsg(oscTeleAddress.c_str());
+    teleMsg.add(accX);
+    teleMsg.add(accY);
+    teleMsg.add(accZ);
+    teleMsg.add(gyroX);
+    teleMsg.add(gyroY);
+    teleMsg.add(gyroZ);
+    teleMsg.add(currentBtnAState ? 1.0f : 0.0f);
 
-    // UDP送信
     if (WiFi.status() == WL_CONNECTED) {
       Udp.beginPacket(targetIp, outPort);
-      msg.send(Udp);
+      teleMsg.send(Udp);
       Udp.endPacket();
-      msg.empty();
+      teleMsg.empty();
     }
+
+    // -------------------------------------------------------------
+    // C. 円運動 (Oジェスチャー) オンボードリアルタイム判定
+    // -------------------------------------------------------------
+    // ジャイロのX軸（Pitch）とY軸（Roll）の角速度をベースに、極座標の回転変化を積算
+    float currentAngle = atan2(gyroY, gyroX);
+    float diff = currentAngle - lastAngle;
+    if (diff < -PI) diff += 2.0f * PI;
+    if (diff > PI)  diff -= 2.0f * PI;
+
+    float gyroMag = sqrt(gyroX * gyroX + gyroY * gyroY);
+    if (gyroMag > 130.0f) { // 130 deg/sec 超の回転時のみ積算
+      accumulatedAngle += diff;
+      if (circleTimer == 0) circleTimer = now;
+
+      // 300度 (約5.2ラジアン) 回転したか
+      if (abs(accumulatedAngle) >= (300.0f * PI / 180.0f)) {
+        if (now - circleTimer < 750) { // 750ms以内の素早い円運動
+          String dir = (accumulatedAngle > 0.0f) ? "CIRCLE_CW" : "CIRCLE_CCW";
+          sendOSCGesture(dir);
+          flashScreenFeedback(dir, GREEN);
+        }
+        accumulatedAngle = 0.0f;
+        circleTimer = 0;
+      }
+    } else {
+      // 静止または遅い時は減衰
+      accumulatedAngle *= 0.85f;
+      if (abs(accumulatedAngle) < 0.1f) circleTimer = 0;
+    }
+    lastAngle = currentAngle;
   }
 
   // -------------------------------------------------------------
-  // B. ボタン操作によるジェスチャー確定の模擬送信 (テスト・デバッグ用)
+  // D. 物理アタック判定 ➔ 重力参照型 18全方位分割ドラムアタック
   // -------------------------------------------------------------
-  // 本体正面の大きなボタン (BtnA) が押されたら、"ATTACK" ジェスチャーを送信
-  if (M5.BtnA.wasPressed()) {
-    sendOSCGesture("ATTACK");
-    flashScreenFeedback("ATTACK", YELLOW);
-  }
-  
-  // 本体側面の小さなボタン (BtnB) が押されたら、"THRUST" ジェスチャーを送信
-  if (M5.BtnB.wasPressed()) {
-    sendOSCGesture("THRUST");
-    flashScreenFeedback("THRUST", CYAN);
-  }
-  
-  // -------------------------------------------------------------
-  // C. M5StickS3内蔵の高速ジェスチャー判定 (超低遅延トリガー)
-  // -------------------------------------------------------------
-  static unsigned long lastGestureTime = 0;
-  if (now - lastGestureTime > 350) { // 350msのチャタリング防止クールダウン
+  // 下方向への強い振り下ろしアタックを検知 (Z軸負のGまたは合成3G超のピーク)
+  if (now - lastAttackTime > GESTURE_COOLDOWN_MS) {
     float accX = 0, accY = 0, accZ = 0;
-    float gyroX = 0, gyroY = 0, gyroZ = 0;
     M5.Imu.getAccel(&accX, &accY, &accZ);
-    M5.Imu.getGyro(&gyroX, &gyroY, &gyroZ);
 
     float totalAcc = sqrt(accX * accX + accY * accY + accZ * accZ);
-    float totalGyro = sqrt(gyroX * gyroX + gyroY * gyroY + gyroZ * gyroZ);
 
-    // A. 強いアタック (瞬間的な3.0G以上の全方向衝撃)
+    // 瞬間的な 3.0G 以上の全方向衝撃、かつアタック方向検出
     if (totalAcc > 3.0f) {
-      lastGestureTime = now;
-      sendOSCGesture("ATTACK");
-      flashScreenFeedback("ATTACK", YELLOW);
-    }
-    // B. 前方への突き (瞬間的な2.0G以上の水平衝撃)
-    else if (abs(accY) > 2.0f || abs(accX) > 2.0f) {
-      lastGestureTime = now;
-      sendOSCGesture("THRUST");
-      flashScreenFeedback("THRUST", CYAN);
-    }
-    // C. 激しいひねり/シェイク (高速な回転)
-    else if (totalGyro > 350.0f) {
-      lastGestureTime = now;
-      sendOSCGesture("SHAKE");
-      flashScreenFeedback("SHAKE", GREEN);
+      lastAttackTime = now;
+
+      // 1. その瞬間の重力加速度ベクトルを規格化 (重力方向 g)
+      float g_len = totalAcc;
+      float gx = accX / g_len;
+      float gy = accY / g_len;
+      float gz = accZ / g_len;
+
+      // 2. 手首の傾斜角度 (地球の物理的な下方向 -gz に対する仰俯角 Phi)
+      // 完全に水平なら gz = -1.0 ➔ Phi = acos(1.0) = 0度
+      float phi = acos(-gz) * (180.0f / PI);
+
+      int finalSector = 0;
+      int noteNumber = 60; // 空間ドラムの基準 MIDI Note Number
+
+      // 3. 傾斜に基づき、Zenith/Nadir層 または Upper/Lower層を判定
+      if (phi >= 75.0f) {
+        // ほぼ垂直に立てた状態 ➔ 真上(Zenith) または 真下(Nadir)
+        if (gy > 0) {
+          finalSector = 16; // Zenith
+          noteNumber = 76;
+        } else {
+          finalSector = 17; // Nadir
+          noteNumber = 77;
+        }
+      } else {
+        // 4. 手首のひねり（回転方向 Theta）を算出 (-180 ~ +180度)
+        float theta = atan2(gy, gx) * (180.0f / PI);
+        if (theta < 0) theta += 360.0f; // 0 ~ 360度に補正
+
+        // 45度刻みで 8分割
+        int yawIndex = (int)((theta + 22.5f) / 45.0f) % 8;
+
+        if (phi < 35.0f) {
+          // 水平〜浅い傾斜 ➔ 斜め上層 (Sectors 0 ~ 7)
+          finalSector = yawIndex;
+          noteNumber = 60 + yawIndex; // Note 60 ~ 67
+        } else {
+          // 深い傾斜 ➔ 斜め下層 (Sectors 8 ~ 15)
+          finalSector = 8 + yawIndex;
+          noteNumber = 68 + yawIndex; // Note 68 ~ 75
+        }
+      }
+
+      // ベロシティはアタック衝撃に比例 (0-127にスケーリング)
+      int velocity = (int)(totalAcc * 15.0f);
+      if (velocity > 127) velocity = 127;
+      if (velocity < 40)  velocity = 40;
+
+      sendOSCAttack(noteNumber, velocity);
+      flashScreenFeedback("HIT: " + String(finalSector), YELLOW);
+      
+      // M5内蔵スピーカーでアタック音の模擬再生
+      M5.Speaker.tone(880 + (finalSector * 40), 50);
     }
   }
 
-  // 画面の復帰処理
-  checkScreenRestore(now);
+  // -------------------------------------------------------------
+  // E. 突き (THRUST) 判定 ➔ キャリブレーション信号送信
+  // -------------------------------------------------------------
+  if (now - lastThrustTime > GESTURE_COOLDOWN_MS) {
+    float accX = 0, accY = 0, accZ = 0;
+    M5.Imu.getAccel(&accX, &accY, &accZ);
 
-  delay(1); // システムの安定稼働用マイクロウェイト
+    // 前方（本体ローカルY軸またはX軸）への急激な水平突き衝撃
+    if (abs(accY) > 2.2f || abs(accX) > 2.2f) {
+      lastThrustTime = now;
+      sendOSCGesture("THRUST");
+      flashScreenFeedback("CALIBRATE", CYAN);
+      M5.Speaker.tone(1500, 100);
+    }
+  }
+
+  // -------------------------------------------------------------
+  // F. 物理ボタンB (BtnB) ➔ Xジェスチャーの模擬トリガー (ダミー準備)
+  // -------------------------------------------------------------
+  if (M5.BtnB.wasPressed()) {
+    sendOSCGesture("GESTURE_X");
+    flashScreenFeedback("GESTURE X", MAGENTA);
+    M5.Speaker.tone(600, 120);
+  }
+
+  // フラッシュ画面の復帰チェック
+  checkScreenRestore(now);
+  delay(1);
 }
 
 // =================================================================
-// SUB FUNCTIONS: 各種補助関数
+// SUB FUNCTIONS: OSC送信 ＆ 表示制御
 // =================================================================
 
 /**
-  ジェスチャー文字列をOSCで送信する関数
-*/
-void sendOSCGesture(String gestureName) {
-  Serial.printf("[OSC] Sending Gesture: %s (%s)\n", gestureName.c_str(), oscGestureAddress.c_str());
+ * ボタンAの緊急割り込みパケット送信
+ */
+void sendOSCBtnState(int isPressed) {
+  Serial.printf("[OSC] BtnA State Changed: %d\n", isPressed);
+  OSCMessage msg(oscBtnAddress.c_str());
+  msg.add(isPressed);
 
-  OSCMessage msg(oscGestureAddress.c_str());
+  if (WiFi.status() == WL_CONNECTED) {
+    Udp.beginPacket(targetIp, outPort);
+    msg.send(Udp);
+    Udp.endPacket();
+  }
+}
+
+/**
+ * 空間18分割ドラムアタック割り込みパケット送信
+ */
+void sendOSCAttack(int noteNum, int velocity) {
+  Serial.printf("[OSC] Attack Drum Hit -> Note: %d, Velocity: %d\n", noteNum, velocity);
+  OSCMessage msg(oscAtkAddress.c_str());
+  msg.add(noteNum);
+  msg.add(velocity);
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Udp.beginPacket(targetIp, outPort);
+    msg.send(Udp);
+    Udp.endPacket();
+  }
+}
+
+/**
+ * 一般ジェスチャー(THRUST, CIRCLE_CW/CCW, GESTURE_X)の送信
+ */
+void sendOSCGesture(String gestureName) {
+  Serial.printf("[OSC] Gesture Send: %s\n", gestureName.c_str());
+  OSCMessage msg(oscGestAddress.c_str());
   msg.add(gestureName.c_str());
 
   if (WiFi.status() == WL_CONNECTED) {
     Udp.beginPacket(targetIp, outPort);
     msg.send(Udp);
     Udp.endPacket();
-    msg.empty();
   }
-
-  // ビープ音で確認
-  M5.Speaker.tone(1500, 80);
 }
 
 /**
-  メイン画面の描画
-*/
+ * メイン画面UI描画
+ */
 void drawMainUI() {
   M5.Lcd.fillScreen(BLACK);
-  
-  // 上部外枠ライン
   M5.Lcd.drawFastHLine(0, 24, 240, DARKGREY);
   
   M5.Lcd.setTextDatum(TC_DATUM);
   M5.Lcd.setTextSize(1.2);
   M5.Lcd.setTextColor(deviceSide == "Right" ? RED : CYAN);
-  M5.Lcd.drawString(deviceSide + " STICK (OSC SENDER)", 120, 6);
+  M5.Lcd.drawString(deviceSide + " STICK - HYBRID MASTER", 120, 6);
 
   M5.Lcd.setTextDatum(MC_DATUM);
   M5.Lcd.setTextColor(WHITE);
-  M5.Lcd.setTextSize(1.5);
-  M5.Lcd.drawString("STREAMING ACTIVE", 120, 68);
+  M5.Lcd.setTextSize(1.4);
+  M5.Lcd.drawString("STREAMING ACTIVE", 120, 55);
 
-  // 下部説明
-  M5.Lcd.setTextDatum(BC_DATUM);
   M5.Lcd.setTextSize(0.9);
   M5.Lcd.setTextColor(LIGHTGREY);
-  M5.Lcd.drawString("BtnA: ATTACK  |  BtnB: THRUST", 120, 126);
+  M5.Lcd.drawString("18-Sector Down Drum Active", 120, 85);
+
+  M5.Lcd.setTextDatum(BC_DATUM);
+  M5.Lcd.setTextSize(0.85);
+  M5.Lcd.setTextColor(GRAY);
+  M5.Lcd.drawString("BtnA: Touch | BtnB: X-Gest", 120, 126);
 }
 
-// 画面フラッシュフィードバック制御用変数
+// 画面フラッシュ制御
 unsigned long flashScreenEndTime = 0;
 bool isFlashing = false;
 
-/**
-  ジェスチャー送信時の画面フラッシュ
-*/
 void flashScreenFeedback(String text, uint32_t color) {
   isFlashing = true;
-  flashScreenEndTime = millis() + 150; // 150msフラッシュ
+  flashScreenEndTime = millis() + 180; 
 
   M5.Lcd.fillScreen(color);
-  M5.Lcd.setTextColor(BLACK);
+  M5.Lcd.setTextColor(color == YELLOW ? BLACK : WHITE);
   M5.Lcd.setTextDatum(MC_DATUM);
-  M5.Lcd.setTextSize(3);
+  M5.Lcd.setTextSize(2.2);
   M5.Lcd.drawString(text, 120, 68);
 }
 
-/**
-  画面の復帰チェック
-*/
 void checkScreenRestore(unsigned long now) {
   if (isFlashing && now >= flashScreenEndTime) {
     isFlashing = false;
