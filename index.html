@@ -820,7 +820,9 @@
       },
 
       // Cooldown and state flags
-      isPadTouched: false
+      isPadTouched: false,
+      lastMoveTime: 0,
+      isAutoTouched: false
     };
 
     // ==========================================
@@ -1113,6 +1115,21 @@
         // Send KORG KP2 hex CC bytes
         streamKP2CC(12, finalPanCC); // CC#12 Pad X
         streamKP2CC(13, finalTiltCC); // CC#13 Pad Y
+
+        // 3. Auto-Touch Detection Logic (For KORG KP2)
+        const moveAmt = Math.abs(gyroX) + Math.abs(gyroY) + Math.abs(gyroZ);
+        const now = Date.now();
+        if (moveAmt > 20.0) { // Motion detected threshold (degrees/sec)
+          state.lastMoveTime = now;
+          if (!state.isAutoTouched && !state.isPadTouched) {
+            sendKP2ButtonTouch(true);
+            state.isAutoTouched = true;
+          }
+        }
+        if (state.isAutoTouched && (now - state.lastMoveTime > 350) && !state.isPadTouched) {
+          sendKP2ButtonTouch(false);
+          state.isAutoTouched = false;
+        }
 
       } else {
         // 左手 (Panpot, Effect Depth, Dolly)
