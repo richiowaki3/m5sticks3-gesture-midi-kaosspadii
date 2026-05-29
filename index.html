@@ -1676,12 +1676,12 @@
       } 
       else if (address.endsWith("/gesture")) {
         const gestureName = args[0];
-        addLog("Gesture Received", `<span class="log-time-gest">${gestureName}</span>`, side === 'Left' ? "left" : "right");
+        addLog("Gesture Received", `<span class="log-highlight">${gestureName}</span>`, side === 'Left' ? "left" : "right");
         
         if (gestureName === "CIRCLE_CW") {
-          changeKP2Program(1); 
+          changeKP2Program(side, 1); 
         } else if (gestureName === "CIRCLE_CCW") {
-          changeKP2Program(-1); 
+          changeKP2Program(side, -1); 
         } else if (gestureName === "THRUST") {
           resetAttitudeCalibration(side); 
         } else if (gestureName === "GESTURE_X") {
@@ -1731,8 +1731,9 @@
       }
 
       const euler = new THREE.Euler().setFromQuaternion(state.quaternions[side], 'YXZ');
-      const rollDeg = (euler.y * 180 / Math.PI + 360) % 360; // Z軸周り(Yaw)からY軸周り(Roll/ひねり)に修正！
-      const pitchDeg = (euler.x * 180 / Math.PI + 360) % 360; // X軸周り(Pitch/上下傾き)
+      // 極性を反転し、現実世界のひねり（右回転＝増加）および傾き（上＝増加）と100%一致させる
+      const rollDeg = (-euler.y * 180 / Math.PI + 360) % 360; 
+      const pitchDeg = (-euler.x * 180 / Math.PI + 360) % 360; 
 
       if (side === 'Right') {
         state.calibrationOffset.Right.roll = rollDeg;
@@ -1767,8 +1768,9 @@
       if (side === 'Right') {
         // --- RIGHT HAND: Circular Wrapping Coords & Sliders Ranges ---
         const euler = new THREE.Euler().setFromQuaternion(state.quaternions.Right, 'YXZ');
-        let currentAbsRoll = (euler.y * 180 / Math.PI + 360) % 360; // Z軸からY軸周り(Roll/ひねり)に修正！
-        let currentAbsPitch = (euler.x * 180 / Math.PI + 360) % 360; // X軸周り(Pitch/上下傾き)
+        // 極性をマイナス反転して、現実の手首の右ひねり・上傾きにグラフィック＆CC増減を完全一致させる
+        let currentAbsRoll = (-euler.y * 180 / Math.PI + 360) % 360; 
+        let currentAbsPitch = (-euler.x * 180 / Math.PI + 360) % 360; 
 
         state.currentAbsoluteAngles.Right.roll = currentAbsRoll;
         state.currentAbsoluteAngles.Right.pitch = currentAbsPitch;
@@ -1820,7 +1822,8 @@
         const finalDollyCC = Math.round(state.relativeCoords.Left.dolly);
 
         const euler = new THREE.Euler().setFromQuaternion(state.quaternions.Left, 'YXZ');
-        let currentAbsPitch = (euler.x * 180 / Math.PI + 360) % 360;
+        // 左手のピッチ傾き極性もマイナス反転してアライメントを統一
+        let currentAbsPitch = (-euler.x * 180 / Math.PI + 360) % 360; 
         let relPitch = (currentAbsPitch - state.calibrationOffset.Left.pitch + 180 + 360) % 360;
 
         let finalTiltCC = mapCircularRangeToMIDI(relPitch, 120, 240);
@@ -1960,13 +1963,13 @@
       playAudioBeep(side, 250 + (sectorIndex * 40), 0.12);
     }
 
-    function changeKP2Program(delta) {
+    function changeKP2Program(side, delta) {
       state.kp2Program += delta;
       if (state.kp2Program > 100) state.kp2Program = 1;
       if (state.kp2Program < 1)   state.kp2Program = 100;
 
-      const targetOutput = state.midiOutputs.Right;
-      const targetChannel = state.midiChannels.Right;
+      const targetOutput = state.midiOutputs[side]; // Route to the correct port based on active hand
+      const targetChannel = state.midiChannels[side]; // Route to the correct channel based on active hand
       
       const pcStatus = 0xC0 + (targetChannel - 1);
 
@@ -1974,22 +1977,23 @@
         try {
           const valToSend = state.kp2Program - 1;
           targetOutput.send([pcStatus, valToSend]);
-          addLog("KP2 MIDI", `Program Change -> Set: <span class="log-highlight">${state.kp2Program}</span> [Ch: ${targetChannel}]`, "system");
+          addLog("KP2 MIDI", `Program Change -> Set: <span class="log-highlight">${state.kp2Program}</span> [Ch: ${targetChannel}]`, side === 'Left' ? 'left' : 'right');
         } catch(err) {
           console.error("MIDI Program change failed:", err);
         }
       } else {
-        addLog("KP2 MIDI", `[Simulated PC] Program: ${state.kp2Program} [Ch: ${targetChannel}]`, "system");
+        addLog("KP2 MIDI", `[Simulated PC] Program: ${state.kp2Program} [Ch: ${targetChannel}]`, side === 'Left' ? 'left' : 'right');
       }
 
+      // UI display updates on Right hand card if performing hand is Right
       const slider = document.getElementById("slider-Right-program");
       const valText = document.getElementById("val-Right-program");
-      if (slider && valText) {
+      if (slider && valText && side === 'Right') {
         slider.style.width = `${state.kp2Program}%`;
         valText.textContent = state.kp2Program;
       }
 
-      playAudioBeep("Right", 1100, 0.08);
+      playAudioBeep(side, 1100, 0.08);
     }
 
     // =================================================================
