@@ -330,7 +330,6 @@
       font-weight: bold;
     }
 
-    /* Range Sliders configuration */
     .range-selector-box {
       margin-top: 0.6rem;
       background: rgba(0, 0, 0, 0.35);
@@ -390,7 +389,7 @@
     }
     
     .form-group {
-      margin-bottom: 1rem;
+      margin-bottom: 1.2rem;
     }
     .form-group:last-child {
       margin-bottom: 0;
@@ -446,6 +445,47 @@
     .form-btn.disconnect {
       background: linear-gradient(135deg, #ff0055 0%, #dc2626 100%);
       box-shadow: 0 6px 20px rgba(255, 0, 85, 0.3);
+    }
+
+    /* Routing UI Blocks */
+    .midi-routing-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin-top: 0.8rem;
+    }
+    @media(min-width: 550px) {
+      .midi-routing-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .route-block {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      padding: 0.8rem;
+    }
+    .route-block.left {
+      border-left: 3px solid var(--color-left);
+    }
+    .route-block.right {
+      border-left: 3px solid var(--color-right);
+    }
+    .route-block-title {
+      font-size: 0.75rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .route-label-side {
+      font-size: 0.65rem;
+      color: var(--text-sub);
+      margin-bottom: 0.2rem;
+      margin-top: 0.4rem;
+      text-transform: uppercase;
+      font-weight: bold;
     }
 
     .log-card {
@@ -522,9 +562,6 @@
       color: var(--text-sub);
       margin-right: 0.5rem;
     }
-    .log-body {
-      flex: 1;
-    }
     .log-time-gest {
       color: var(--color-flash);
       font-weight: bold;
@@ -545,7 +582,7 @@
       color: var(--color-flash);
     }
 
-    /* Emulator Styling */
+    /* Emulator */
     .emulator-card {
       background: rgba(255, 255, 255, 0.01);
       border: 1px dashed rgba(255, 255, 255, 0.08);
@@ -662,7 +699,7 @@
   <!-- Header Section -->
   <header>
     <h1>ANTIGRAVITY KP2 HYBRID MASTER</h1>
-    <div class="subtitle">KORG KAOSS PAD KP2 3D骨格空間制御システム (v2.2)</div>
+    <div class="subtitle">KORG KAOSS PAD KP2 3D骨格空間制御システム (v2.3)</div>
   </header>
 
   <!-- Dashboard Container -->
@@ -841,13 +878,13 @@
       </div>
     </div>
 
-    <!-- SYSTEM CONFIGURATION CARD -->
+    <!-- DUAL INDEPENDENT MIDI ROUTING CARD -->
     <div class="system-card">
       <div class="system-title">
-        <i class="fa-solid fa-sliders"></i> KP2 OSC BRIDGE SERVER CONTROLS
+        <i class="fa-solid fa-route"></i> DUAL INDEPENDENT MIDI ROUTING CONFIG
       </div>
       
-      <!-- WebSocket Connection Form -->
+      <!-- WebSocket Connection Address -->
       <div class="form-group">
         <label class="form-label"><i class="fa-solid fa-network-wired"></i> WebSocket OSC Bridge Address</label>
         <div class="input-row">
@@ -858,12 +895,73 @@
         </div>
       </div>
 
-      <!-- MIDI Output Port Selection -->
-      <div class="form-group">
-        <label class="form-label"><i class="fa-solid fa-music"></i> Web MIDI Output target</label>
-        <select id="midi-port-select" class="form-select" onchange="onMidiPortChange()">
-          <option value="">Searching for MIDI devices...</option>
-        </select>
+      <!-- Dual Routing Selector Grid -->
+      <div class="midi-routing-grid">
+        
+        <!-- LEFT HAND MIDI target -->
+        <div class="route-block left">
+          <div class="route-block-title" style="color: var(--color-left);">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Left Hand Routing (左手用)
+          </div>
+          <div class="route-label-side">MIDI Device Port Target</div>
+          <select id="midi-port-select-Left" class="form-select" onchange="onMidiPortChange('Left')" style="padding: 0.5rem; font-size: 0.75rem; border-radius: 8px;">
+            <option value="">Searching for MIDI devices...</option>
+          </select>
+          
+          <div class="route-label-side">MIDI Output Channel</div>
+          <select id="midi-chan-Left" class="form-select" onchange="onMidiChannelChange('Left')" style="padding: 0.5rem; font-size: 0.75rem; border-radius: 8px;">
+            <!-- Channels 1-16 -->
+            <option value="1">Channel 1 (Default)</option>
+            <option value="2">Channel 2</option>
+            <option value="3">Channel 3</option>
+            <option value="4">Channel 4</option>
+            <option value="5">Channel 5</option>
+            <option value="6">Channel 6</option>
+            <option value="7">Channel 7</option>
+            <option value="8">Channel 8</option>
+            <option value="9">Channel 9</option>
+            <option value="10">Channel 10</option>
+            <option value="11">Channel 11</option>
+            <option value="12">Channel 12</option>
+            <option value="13">Channel 13</option>
+            <option value="14">Channel 14</option>
+            <option value="15">Channel 15</option>
+            <option value="16">Channel 16</option>
+          </select>
+        </div>
+
+        <!-- RIGHT HAND MIDI target -->
+        <div class="route-block right">
+          <div class="route-block-title" style="color: var(--color-right);">
+            <i class="fa-solid fa-cube"></i> Right Hand Routing (右手用)
+          </div>
+          <div class="route-label-side">MIDI Device Port Target</div>
+          <select id="midi-port-select-Right" class="form-select" onchange="onMidiPortChange('Right')" style="padding: 0.5rem; font-size: 0.75rem; border-radius: 8px;">
+            <option value="">Searching for MIDI devices...</option>
+          </select>
+          
+          <div class="route-label-side">MIDI Output Channel</div>
+          <select id="midi-chan-Right" class="form-select" onchange="onMidiChannelChange('Right')" style="padding: 0.5rem; font-size: 0.75rem; border-radius: 8px;">
+            <!-- Channels 1-16 -->
+            <option value="1" selected>Channel 1 (Default)</option>
+            <option value="2">Channel 2</option>
+            <option value="3">Channel 3</option>
+            <option value="4">Channel 4</option>
+            <option value="5">Channel 5</option>
+            <option value="6">Channel 6</option>
+            <option value="7">Channel 7</option>
+            <option value="8">Channel 8</option>
+            <option value="9">Channel 9</option>
+            <option value="10">Channel 10</option>
+            <option value="11">Channel 11</option>
+            <option value="12">Channel 12</option>
+            <option value="13">Channel 13</option>
+            <option value="14">Channel 14</option>
+            <option value="15">Channel 15</option>
+            <option value="16">Channel 16</option>
+          </select>
+        </div>
+
       </div>
     </div>
 
@@ -948,7 +1046,6 @@
     // =================================================================
     const CONFIG = {
       defaultIP: "192.168.11.10:8080",
-      midiChannel: 1, 
       boneLength: 2.5,
       sensorDeadband: 0.05,
       accScale: 8.0, 
@@ -959,7 +1056,16 @@
       ws: null,
       isConnected: false,
       midiAccess: null,
-      midiOutput: null,
+
+      // --- DUAL INDEPENDENT MIDI ROUTING STATE ---
+      midiOutputs: {
+        Left: null,
+        Right: null
+      },
+      midiChannels: {
+        Left: 1, 
+        Right: 1
+      },
       
       // Attitude quaternions for Left and Right hands (Complementary Filter)
       quaternions: {
@@ -1177,7 +1283,7 @@
 
       mesh.scale.set(3.5, 3.5, 3.5);
       mesh.material.opacity = 1.0;
-      mesh.material.color.setHex(0xffea00); // Neon Gold Flash
+      mesh.material.color.setHex(0xffea00); 
 
       const parts = [];
       const partCount = 10;
@@ -1446,7 +1552,6 @@
     }
 
     function resetAttitudeCalibration(side) {
-      // Get current absolute attitude orientation at the moment of calibration
       const euler = new THREE.Euler().setFromQuaternion(state.quaternions[side], 'YXZ');
       const rollDeg = (euler.z * 180 / Math.PI + 360) % 360;
       const pitchDeg = (euler.x * 180 / Math.PI + 360) % 360;
@@ -1463,9 +1568,7 @@
         addLog("Left", `Calibration Lock: Lock position at Pitch ${pitchDeg.toFixed(0)}° mapped as 180° Center.`, "left");
       }
 
-      // Reset attitude quaternion to Identity
       state.quaternions[side].set(0, 0, 0, 1);
-      
       playAudioBeep(side, 880, 0.2);
     }
 
@@ -1474,13 +1577,10 @@
       setDeviceStatus(side, true);
       state.lastDataReceived[side] = Date.now();
 
-      // 1. Process Complimentary attitude orientation filter
       processComplementaryFilter(side, accX, accY, accZ, gyroX, gyroY, gyroZ, 0.015);
 
       if (side === 'Right') {
         // --- RIGHT HAND: Circular Wrapping Coords & Sliders Ranges ---
-        
-        // A. Extract Absolute Pitch and Roll angles in 0° ~ 360° circular ring
         const euler = new THREE.Euler().setFromQuaternion(state.quaternions.Right, 'YXZ');
         let currentAbsRoll = (euler.z * 180 / Math.PI + 360) % 360;
         let currentAbsPitch = (euler.x * 180 / Math.PI + 360) % 360;
@@ -1488,12 +1588,9 @@
         state.currentAbsoluteAngles.Right.roll = currentAbsRoll;
         state.currentAbsoluteAngles.Right.pitch = currentAbsPitch;
 
-        // B. Calculate Wrapping Circular Coordinates relative to calibration lock (locked at 180°)
-        // theta_rel = (current - calib + 180) % 360
         let relRoll = (currentAbsRoll - state.calibrationOffset.Right.roll + 180 + 360) % 360;
         let relPitch = (currentAbsPitch - state.calibrationOffset.Right.pitch + 180 + 360) % 360;
 
-        // C. Apply User range sector bounds (Min / Max sliders)
         const rollMin = state.effectiveRange.Right.roll.min;
         const rollMax = state.effectiveRange.Right.roll.max;
         const pitchMin = state.effectiveRange.Right.pitch.min;
@@ -1502,17 +1599,16 @@
         let finalRollCC = mapCircularRangeToMIDI(relRoll, rollMin, rollMax);
         let finalPitchCC = mapCircularRangeToMIDI(relPitch, pitchMin, pitchMax);
 
-        // Update displays
         document.getElementById("val-Right-pan-raw").textContent = relRoll.toFixed(0) + "°";
         document.getElementById("val-Right-tilt-raw").textContent = relPitch.toFixed(0) + "°";
         updateSensorUI("Right", "pan", finalRollCC);
         updateSensorUI("Right", "tilt", finalPitchCC);
 
-        // Stream CCs
-        streamKP2CC(12, finalRollCC); 
-        streamKP2CC(13, finalPitchCC); 
+        // Stream CCs to Right MIDI Out Target
+        streamKP2CC("Right", 12, finalRollCC); 
+        streamKP2CC("Right", 13, finalPitchCC); 
 
-        // D. STRICT BUTTON A Touch Gate (CC#92)
+        // Touch Gate
         if (rawArgs.length >= 7) {
           const btnPressed = Number(rawArgs[6]) === 1;
           sendKP2ButtonTouch(btnPressed);
@@ -1534,10 +1630,8 @@
         let currentAbsPitch = (euler.x * 180 / Math.PI + 360) % 360;
         let relPitch = (currentAbsPitch - state.calibrationOffset.Left.pitch + 180 + 360) % 360;
 
-        // Pitch absolute angle maps to depth CC#91 (120 ~ 240 deg defaults)
         let finalTiltCC = mapCircularRangeToMIDI(relPitch, 120, 240);
 
-        // Update displays
         document.getElementById("val-Left-pan-raw").textContent = finalPanCC;
         document.getElementById("val-Left-dolly-raw").textContent = finalDollyCC;
         document.getElementById("val-Left-tilt-raw").textContent = relPitch.toFixed(0) + "°";
@@ -1546,23 +1640,21 @@
         updateSensorUI("Left", "dolly", finalDollyCC);
         updateSensorUI("Left", "tilt", finalTiltCC);
 
-        streamKP2CC(10, finalPanCC);  
-        streamKP2CC(20, finalDollyCC); 
-        streamKP2CC(91, finalTiltCC);  
+        // Stream CCs to Left MIDI Out Target
+        streamKP2CC("Left", 10, finalPanCC);  
+        streamKP2CC("Left", 20, finalDollyCC); 
+        streamKP2CC("Left", 91, finalTiltCC);  
       }
     }
 
-    // Mathematical circular range bounds mapping
     function mapCircularRangeToMIDI(val, min, max) {
       if (min === max) return 64;
 
       if (min < max) {
-        // Standard range (e.g. 90 ~ 270)
         if (val <= min) return 1;
         if (val >= max) return 127;
         return Math.round(mapRange(val, min, max, 1, 127));
       } else {
-        // Wrapped range (e.g. 300 ~ 60)
         if (val >= min) {
           const width = (360 - min) + max;
           return Math.round(mapRange(val - min, 0, width, 1, 127));
@@ -1570,7 +1662,6 @@
           const width = (360 - min) + max;
           return Math.round(mapRange((360 - min) + val, 0, width, 1, 127));
         } else {
-          // Dead zone -> clamp to closest
           const distToMin = Math.abs(val - min);
           const distToMax = Math.abs(val - max);
           return distToMin < distToMax ? 1 : 127;
@@ -1578,17 +1669,6 @@
       }
     }
 
-    function updateSensorUI(side, type, value) {
-      const slider = document.getElementById(`slider-${side}-${type}`);
-      const valText = document.getElementById(`val-${side}-${type}`);
-      if (slider && valText) {
-        const percent = (value / 127) * 100;
-        slider.style.width = `${percent}%`;
-        valText.textContent = value;
-      }
-    }
-
-    // Update Ranges Sliders State and text live
     function updateRangeSlidersUI(type) {
       const minVal = Number(document.getElementById(`range-${type}-min`).value);
       const maxVal = Number(document.getElementById(`range-${type}-max`).value);
@@ -1603,29 +1683,32 @@
     // 6. SPATIAL DRUM IMPACTS & PROGRAM CONTROLLER
     // =================================================================
     function triggerSpatialDrumHit(side, noteNum, velocity) {
-      // Web MIDI output
-      if (state.midiOutput) {
-        try {
-          // Note On (Ch 1): [0x90, Note, Vel]
-          state.midiOutput.send([0x90, noteNum, velocity]);
-          addLog("AIR DRUM", `HIT Note: <span class="log-highlight">${noteNum}</span> (Vel: ${velocity})`, "hit");
+      const targetOutput = state.midiOutputs[side];
+      const targetChannel = state.midiChannels[side];
+      
+      // Note On: 0x90 + (Channel - 1)
+      const noteOnStatus = 0x90 + (targetChannel - 1);
+      const noteOffStatus = 0x80 + (targetChannel - 1);
 
-          // Auto-cut note after 80ms to avoid ring-outs
+      if (targetOutput) {
+        try {
+          targetOutput.send([noteOnStatus, noteNum, velocity]);
+          addLog(`${side} DRUM`, `HIT Note: <span class="log-highlight">${noteNum}</span> (Vel: ${velocity}) [Ch: ${targetChannel}]`, "hit");
+
           setTimeout(() => {
-            if (state.midiOutput) {
-              state.midiOutput.send([0x80, noteNum, 0]);
+            if (targetOutput) {
+              targetOutput.send([noteOffStatus, noteNum, 0]);
             }
           }, 80);
         } catch(err) {
-          addLog("System", `Air Drum MIDI send failed: ${err.message}`, "system");
+          addLog("System", `${side} Air Drum MIDI send failed: ${err.message}`, "system");
         }
       } else {
-        addLog("AIR DRUM", `[Simulated Hit] Note: ${noteNum} (Vel: ${velocity})`, "hit");
+        addLog(`${side} DRUM`, `[Simulated Hit] Note: ${noteNum} (Vel: ${velocity}) [Ch: ${targetChannel}]`, "hit");
       }
 
-      // Animate 3D neon sector node explosion
       const sectorIndex = noteNum - 60; 
-      if (sectorIndex >= 0 && sectorIndex <= 17) {
+      if (side === 'Right' && sectorIndex >= 0 && sectorIndex <= 17) {
         trigger3DDrumFlash(sectorIndex);
       }
 
@@ -1637,20 +1720,24 @@
       if (state.kp2Program > 100) state.kp2Program = 1;
       if (state.kp2Program < 1)   state.kp2Program = 100;
 
-      // Program Change [0xC0, ProgramVal 0-99]
-      if (state.midiOutput) {
+      const targetOutput = state.midiOutputs.Right;
+      const targetChannel = state.midiChannels.Right;
+      
+      // Program Change: 0xC0 + (Channel - 1)
+      const pcStatus = 0xC0 + (targetChannel - 1);
+
+      if (targetOutput) {
         try {
           const valToSend = state.kp2Program - 1;
-          state.midiOutput.send([0xC0, valToSend]);
-          addLog("KP2 MIDI", `Program Change -> Set: <span class="log-highlight">${state.kp2Program}</span>`, "system");
+          targetOutput.send([pcStatus, valToSend]);
+          addLog("KP2 MIDI", `Program Change -> Set: <span class="log-highlight">${state.kp2Program}</span> [Ch: ${targetChannel}]`, "system");
         } catch(err) {
           console.error("MIDI Program change failed:", err);
         }
       } else {
-        addLog("KP2 MIDI", `[Simulated PC] Program: ${state.kp2Program}`, "system");
+        addLog("KP2 MIDI", `[Simulated PC] Program: ${state.kp2Program} [Ch: ${targetChannel}]`, "system");
       }
 
-      // Update UI slider
       const slider = document.getElementById("slider-Right-program");
       const valText = document.getElementById("val-Right-program");
       if (slider && valText) {
@@ -1662,7 +1749,7 @@
     }
 
     // =================================================================
-    // 7. WEB MIDI API CORE INTERFACE
+    // 7. WEB MIDI API CORE INTERFACE (DUAL-INDEPENDENT ROUTING)
     // =================================================================
     function initMIDI() {
       if (navigator.requestMIDIAccess) {
@@ -1670,17 +1757,19 @@
           .then(onMIDISuccess, onMIDIFailure);
       } else {
         addLog("System", "Web MIDI API is not supported in this browser.", "system");
-        const select = document.getElementById("midi-port-select");
-        select.innerHTML = '<option value="">MIDI Not Supported</option>';
+        ["Left", "Right"].forEach(side => {
+          const select = document.getElementById(`midi-port-select-${side}`);
+          if (select) select.innerHTML = '<option value="">MIDI Not Supported</option>';
+        });
       }
     }
 
     function onMIDISuccess(midiAccess) {
       state.midiAccess = midiAccess;
       addLog("System", "Web MIDI Access successfully granted.", "system");
-      updateMIDIPortList();
+      updateMIDIPortLists();
       midiAccess.onstatechange = () => {
-        updateMIDIPortList();
+        updateMIDIPortLists();
       };
     }
 
@@ -1688,62 +1777,83 @@
       addLog("System", `Failed to initialize MIDI Access: ${msg}`, "system");
     }
 
-    function updateMIDIPortList() {
-      const select = document.getElementById("midi-port-select");
-      if (!select || !state.midiAccess) return;
+    function updateMIDIPortLists() {
+      if (!state.midiAccess) return;
 
       const outputs = state.midiAccess.outputs;
-      if (outputs.size === 0) {
-        select.innerHTML = '<option value="">No MIDI output ports found</option>';
-        state.midiOutput = null;
-        return;
-      }
+      
+      ["Left", "Right"].forEach(side => {
+        const select = document.getElementById(`midi-port-select-${side}`);
+        if (!select) return;
 
-      let html = '<option value="">-- Select target MIDI Port (e.g. U6MIDI Pro) --</option>';
-      outputs.forEach((port) => {
-        const selected = (state.midiOutput && state.midiOutput.id === port.id) ? 'selected' : '';
-        html += `<option value="${port.id}" ${selected}>${port.name} (${port.manufacturer || 'Generic'})</option>`;
+        if (outputs.size === 0) {
+          select.innerHTML = '<option value="">No MIDI output ports found</option>';
+          state.midiOutputs[side] = null;
+          return;
+        }
+
+        let html = `<option value="">-- Select ${side} MIDI Port --</option>`;
+        outputs.forEach((port) => {
+          const selected = (state.midiOutputs[side] && state.midiOutputs[side].id === port.id) ? 'selected' : '';
+          html += `<option value="${port.id}" ${selected}>${port.name} (${port.manufacturer || 'Generic'})</option>`;
+        });
+
+        select.innerHTML = html;
+
+        // Auto-select targets (Left -> First target, Right -> First target as well)
+        if (!state.midiOutputs[side] && outputs.size > 0) {
+          const portArray = Array.from(outputs.values());
+          // If U6MIDI Pro has multiple ports, select Port 1 for Right, Port 2 for Left
+          let selectedPort = portArray[0];
+          if (side === 'Left' && portArray.length > 1) {
+            selectedPort = portArray[1]; // Route Left stick to Port 2 if available!
+          }
+          state.midiOutputs[side] = selectedPort;
+          addLog("System", `Auto-routing [${side} Hand] -> <span class="log-highlight">${selectedPort.name}</span>`, "system");
+        }
       });
-
-      select.innerHTML = html;
-
-      if (!state.midiOutput && outputs.size > 0) {
-        const firstPort = outputs.values().next().value;
-        state.midiOutput = firstPort;
-        addLog("System", `Auto-target selected: <span class="log-highlight">${firstPort.name}</span>`, "system");
-      }
     }
 
-    function onMidiPortChange() {
-      const select = document.getElementById("midi-port-select");
+    function onMidiPortChange(side) {
+      const select = document.getElementById(`midi-port-select-${side}`);
       const portId = select.value;
 
       if (!portId) {
-        state.midiOutput = null;
-        addLog("System", "MIDI Output disabled.", "system");
+        state.midiOutputs[side] = null;
+        addLog("System", `${side} Hand MIDI Output disabled.`, "system");
         return;
       }
 
-      state.midiOutput = state.midiAccess.outputs.get(portId);
-      if (state.midiOutput) {
-        addLog("System", `Target MIDI Output set to: <span class="log-highlight">${state.midiOutput.name}</span>`, "system");
+      state.midiOutputs[side] = state.midiAccess.outputs.get(portId);
+      if (state.midiOutputs[side]) {
+        addLog("System", `Routed [${side} Hand] -> <span class="log-highlight">${state.midiOutputs[side].name}</span>`, "system");
       }
     }
 
-    // Direct stream for CC messages [0xB0, CC, Val]
-    function streamKP2CC(ccNumber, value) {
-      if (state.midiOutput) {
+    function onMidiChannelChange(side) {
+      const select = document.getElementById(`midi-chan-${side}`);
+      state.midiChannels[side] = Number(select.value);
+      addLog("System", `Set [${side} Hand] MIDI Channel -> <span class="log-highlight">Ch. ${state.midiChannels[side]}</span>`, "system");
+    }
+
+    // Direct stream for CC messages [0xB0 + (Ch-1), CC, Val]
+    function streamKP2CC(side, ccNumber, value) {
+      const targetOutput = state.midiOutputs[side];
+      const targetChannel = state.midiChannels[side];
+
+      if (targetOutput) {
         const val = Math.max(0, Math.min(127, Math.round(value)));
         
-        let side = [12, 13, 92].includes(ccNumber) ? 'Right' : 'Left';
         let key = ccNumber === 12 ? 'pan' : ccNumber === 13 ? 'tilt' : ccNumber === 92 ? 'touch' : ccNumber === 10 ? 'pan' : ccNumber === 20 ? 'dolly' : 'tilt';
         
         if (val !== state.lastCCSent[side][key]) {
           try {
-            state.midiOutput.send([0xB0, ccNumber, val]);
+            // CC status: 0xB0 + (Channel - 1)
+            const ccStatus = 0xB0 + (targetChannel - 1);
+            targetOutput.send([ccStatus, ccNumber, val]);
             state.lastCCSent[side][key] = val;
           } catch (err) {
-            console.error("Direct MIDI send failed:", err);
+            console.error(`${side} Hand CC send failed:`, err);
           }
         }
       }
@@ -1773,16 +1883,20 @@
 
       state.isPadTouched = isTouched;
 
-      if (state.midiOutput) {
+      const targetOutput = state.midiOutputs.Right;
+      const targetChannel = state.midiChannels.Right;
+
+      if (targetOutput) {
         try {
-          state.midiOutput.send([0xB0, 92, touchVal]);
-          addLog("KP2 MIDI", `Pad Touch CC#92 -> Value: ${touchVal}`, "right");
+          const ccStatus = 0xB0 + (targetChannel - 1);
+          targetOutput.send([ccStatus, 92, touchVal]);
+          addLog("KP2 MIDI", `Pad Touch CC#92 -> Value: ${touchVal} [Ch: ${targetChannel}]`, "right");
           state.lastCCSent.Right.touch = touchVal;
         } catch (err) {
           addLog("System", `KP2 Touch failed: ${err.message}`, "system");
         }
       } else {
-        addLog("KP2 MIDI", `[Simulated Touch] CC#92 -> Value: ${touchVal}`, "system");
+        addLog("KP2 MIDI", `[Simulated Touch] CC#92 -> Value: ${touchVal} [Ch: ${targetChannel}]`, "system");
       }
     }
 
@@ -1889,17 +2003,14 @@
         const panVal = Math.round((x / rect.width) * 127);
         const tiltVal = Math.round((1 - (y / rect.height)) * 127);
 
-        // Convert to absolute angles for simulator feed
         const simAbsRoll = Math.round(mapRange(panVal, 0, 127, 0, 360));
         const simAbsPitch = Math.round(mapRange(tiltVal, 0, 127, 0, 360));
 
-        // Sync simulator sliders
         document.getElementById("sim-roll").value = simAbsRoll;
         document.getElementById("lbl-sim-roll").textContent = simAbsRoll + "°";
         document.getElementById("sim-pitch").value = simAbsPitch;
         document.getElementById("lbl-sim-pitch").textContent = simAbsPitch + "°";
 
-        // Handle through telemetry pipeline to test mapping and visualizer
         handleTelemetry("Right", 0, 0, -1, 0, 0, 0, [0, 0, -1, 0, 0, 0, state.isPadTouched ? 1 : 0]);
       }
 
@@ -1949,15 +2060,12 @@
       document.getElementById("lbl-sim-roll").textContent = rollVal + "°";
       document.getElementById("lbl-sim-pitch").textContent = pitchVal + "°";
 
-      // Directly update estimated orientation angles for simulated visualization
       const rollRad = (rollVal - 180) * Math.PI / 180;
       const pitchRad = (pitchVal - 180) * Math.PI / 180;
       state.quaternions.Right.setFromEuler(new THREE.Euler(pitchRad, 0, rollRad, 'YXZ'));
 
-      // Forward into mapping pipeline
       handleTelemetry("Right", 0, 0, -1, 0, 0, 0, [0, 0, -1, 0, 0, 0, state.isPadTouched ? 1 : 0]);
 
-      // Update simulator pad pointer visual
       const pad = document.getElementById("kp2-pad");
       const pointer = document.getElementById("pad-pointer");
       if (pad && pointer && state.lastCCSent.Right.pan !== -1) {
